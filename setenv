@@ -1,6 +1,7 @@
 #!/bin/bash
 
-CUSTOM_RUSTC=/home/mabez/development/rust/rust-xtensa/rust
+CUSTOM_RUSTC=/home/mabez/development/rust/rust-xtensa/rust-llvm6
+# CUSTOM_RUSTC=/home/mabez/development/rust/rust-xtensa/rust-llvm8
 
 export RUST_BACKTRACE=1 
 export XARGO_RUST_SRC=$CUSTOM_RUSTC/src 

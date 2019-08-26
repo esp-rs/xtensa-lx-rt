@@ -8,7 +8,7 @@
             "type": "gdb",
             "request": "launch",
             "name": "Debug",
-            "target": "target/xtensa-esp32-none-elf/debug/examples/test",
+            "target": "target/xtensa-esp32-none-elf/debug/examples/blinky",
             "gdbpath": "xtensa-esp32-elf-gdb",
             "cwd": "${workspaceRoot}",
             "autorun": [

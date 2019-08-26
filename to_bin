@@ -1,5 +1,6 @@
 #!/bin/zsh
 
-BIN_PATH=./target/xtensa-esp32-none-elf/debug/examples/test
+BIN_PATH=./target/xtensa-esp32-none-elf/debug/examples/blinky
+rm $BIN_PATH.bin
 
 esptool --chip esp32 elf2image --flash_mode="dio" --flash_freq "40m" --flash_size "4MB" -o $BIN_PATH.bin $BIN_PATH
