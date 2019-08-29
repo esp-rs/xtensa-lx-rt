@@ -6,7 +6,6 @@
 use xtensa_lx6_rt as _;
 
 use core::panic::PanicInfo;
-use core::sync::atomic::{self, Ordering};
 
 // GPIO output enable reg
 const GPIO_ENABLE_W1TS_REG: u32 = 0x3FF44024;
@@ -22,13 +21,6 @@ const GPIO_FUNCX_OUT_BASE: u32 = 0x3FF44530;
 const GPIO_FUNCX_OUT_SEL_CFG: u32 = GPIO_FUNCX_OUT_BASE + (BLINKY_GPIO * 4);
 
 const IO_MUX_GPIO2_REG: u32 = 0x3FF49040;
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    loop {
-
-    }
-}
 
 #[no_mangle]
 fn main() -> ! {
@@ -46,11 +38,18 @@ fn main() -> ! {
         unsafe {
             core::ptr::write_volatile(GPIO_OUT_W1TS_REG as *mut _, 0x1 << BLINKY_GPIO);           
         }
-        delay(80_000_000);
+        delay2(80_000_000);
         unsafe {
             core::ptr::write_volatile(GPIO_OUT_W1TC_REG as *mut _, 0x1 << BLINKY_GPIO);
         }
-        delay(80_000_000);
+        delay2(80_000_000);
+    }
+}
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {
+
     }
 }
 
@@ -58,5 +57,11 @@ pub fn delay(clocks: u32) {
     let dummy_var: u32 = 0;
     for _ in 0..clocks {
         unsafe { core::ptr::read_volatile(&dummy_var) };
+    }
+}
+
+pub fn delay2(clocks: u32) {
+    for _ in 0..clocks {
+        unsafe { asm!("nop" :::: "volatile") };
     }
 }
