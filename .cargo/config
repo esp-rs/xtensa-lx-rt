@@ -9,8 +9,14 @@ rustflags = [
     "-C", "link-arg=-nostartfiles", # required as extern gcc compiler is called (xtensa-esp32-elf-gcc)
     "-C", "link-arg=-Wl,-Txtensa.x",
     "-C", "debuginfo=0", # not 2
+    
+    "--emit", "asm",
+    # "-C", "save-temps",
+    # "-C", "llvm-args=-fno-dwarf2-cfi-asm",
+    # "-C", "link-arg=-Wa,-g,-fno-dwarf2-cfi-asm", # -fno-dwarf2-cfi-asm
 
-    # "-C", "llvm-args=--frame-pointer",
+    # "-C", "linker=xtensa-esp32-elf-gcc",
+    # "-C", "linker-flavor=ld",
     # "-C", "llvm-args='--frame-pointers none'",
     # "-C", "force-frame-pointers=no",
     # "-C", "save-temps",
