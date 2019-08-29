@@ -6,14 +6,13 @@ use std::path::PathBuf;
 fn main() {
     // Put the linker script somewhere the linker can find it
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    File::create(out.join("xtensa.x"))
+    File::create(out.join("link.x"))
         .unwrap()
-        .write_all(include_bytes!("xtensa.x"))
+        .write_all(include_bytes!("xtensa.in.x"))
         .unwrap();
     println!("cargo:rustc-link-search={}", out.display());
 
     // Only re-run the build script when memory.x is changed,
     // instead of when any part of the source code changes.
-    println!("cargo:rerun-if-changed=xtensa.x");
-    // println!("cargo:rerun-if-changed=mwatch.x");
+    println!("cargo:rerun-if-changed=xtensa.in.x");
 }
