@@ -10,7 +10,7 @@ rustflags = [
     "-C", "link-arg=-Wl,-Txtensa.x",
     "-C", "debuginfo=0", # not 2
     
-    "--emit", "asm",
+    # "--emit", "asm",
     # "-C", "save-temps",
     # "-C", "llvm-args=-fno-dwarf2-cfi-asm",
     # "-C", "link-arg=-Wa,-g,-fno-dwarf2-cfi-asm", # -fno-dwarf2-cfi-asm
