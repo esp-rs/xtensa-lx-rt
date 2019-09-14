@@ -2,69 +2,49 @@
 
 INCLUDE memory.x
 
-
 ENTRY(Reset)
-
-
 
 /* Define output sections */
 SECTIONS {
 
-  /* The program code and other data goes into Instruction RAM */
-  .iram0.text :
+  .iram.text :
   {
-    /* Code marked as runnning out of IRAM */
-
-    _iram_text_start = ABSOLUTE(.);
-    *(.iram1 .iram1.*)
-    *libphy.a:(.literal .text .literal.* .text.*)
-    *librtc.a:(.literal .text .literal.* .text.*)
-    *libpp.a:(.literal .text .literal.* .text.*)
-    *libhal.a:(.literal .text .literal.* .text.*)
-    _iram_text_end = ABSOLUTE(.);
-  } > iram_seg
-  /*.iram.text :
-  {
-    . = ALIGN(16);
-    KEEP(*(.entry.text))
-    *(.text)
-    *(.text*)
-    KEEP (*(.init))
-    KEEP (*(.fini))
-    *(.rodata)
-    *(.rodata*)
-
-    . = ALIGN(4);
+    _stext = .;
+    _text_start = ABSOLUTE(.);
+    *(.literal .text .literal.* .text.*)
+    _text_end = ABSOLUTE(.);
     _etext = .;
-  } >iram_seg */
+  } > iram_seg
 
-  /* Initialized data goes into Data RAM */
-  _sidata = .;
-  .data : AT(_sidata)
+  /* Shared RAM */
+  .dram0.bss (NOLOAD) :
   {
-    . = ALIGN(4);
-    _sdata = .;
-    *(.data)
-    *(.data*)
-
-    . = ALIGN(4);
-    _edata = .;
-  } >dram_seg
-
-  /* Uninitialized data also goes into Data RAM */
-  .bss :
-  {
-    . = ALIGN(4);
-    _sbss = .;
+    . = ALIGN (8);
+    _bss_start = ABSOLUTE(.);
     *(.bss)
-    *(.bss*)
-    *(COMMON)
-
-    . = ALIGN(4);
-    _ebss = .;
+    *(.bss.*)
+    . = ALIGN (8);
+    _bss_end = ABSOLUTE(.);
   } >dram_seg
 
-  . = ALIGN(4);
-  PROVIDE ( end = . );
-  PROVIDE ( _end = . );
+  .dram0.data :
+  {
+    _data_start = ABSOLUTE(.);
+    *(.data)
+    *(.data.*)
+    _data_end = ABSOLUTE(.);
+  } >dram_seg
+
+  _sidata = LOADADDR(.dram0.data);
+
+  .dram0.rodata :
+  {
+    _rodata_start = ABSOLUTE(.);
+    *(.rodata)
+    *(.rodata.*)
+    _rodata_end = ABSOLUTE(.);
+    . = ALIGN(4);
+    _heap_start = ABSOLUTE(.);
+  } >dram_seg
+
 }
