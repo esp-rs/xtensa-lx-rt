@@ -1,6 +1,10 @@
 #![no_std]
+#![feature(asm)]
+#![feature(naked_functions)]
 
 use r0;
+
+mod exceptions;
 
 #[doc(hidden)]
 #[no_mangle]
@@ -21,8 +25,8 @@ pub unsafe extern "C" fn Reset() -> ! {
         // This symbol will be provided by the user via `#[entry]`
         fn main() -> !;
 
-        // This symbol will be provided by the user via `#[pre_init]`
-        // fn __pre_init();
+    // This symbol will be provided by the user via `#[pre_init]`
+    // fn __pre_init();
     }
 
     // __pre_init();
