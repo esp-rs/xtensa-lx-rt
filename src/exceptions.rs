@@ -82,11 +82,72 @@ pub unsafe extern "C" fn _rust_user_exc() {
     panic!("Ruh Roh")
 }
 
+/* Raw vector handlers */
+// TODO window vectors
+// macros this?
+
+#[naked]
+#[no_mangle]
+#[link_section = ".Level2InterruptVector.text"]
+pub unsafe extern "C" fn _Level2InterruptVector() -> ! {
+    loop {}
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".Level3InterruptVector.text"]
+pub unsafe extern "C" fn _Level3InterruptVector() -> ! {
+    loop {}
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".Level4InterruptVector.text"]
+pub unsafe extern "C" fn _Level4InterruptVector() -> ! {
+    loop {}
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".Level5InterruptVector.text"]
+pub unsafe extern "C" fn _Level5InterruptVector() -> ! {
+    loop {}
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".DebugExceptionVector.text"]
+pub unsafe extern "C" fn _DebugExceptionVector() -> ! {
+    loop {} /* call0 is a jump, can't get here */
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".NMIExceptionVector.text"]
+pub unsafe extern "C" fn _NMIExceptionVector() -> ! {
+    loop {} /* call0 is a jump, can't get here */
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".KernelExceptionVector.text"]
+pub unsafe extern "C" fn _KernelExceptionVector() -> ! {
+    loop {} /* call0 is a jump, can't get here */
+}
+
 #[naked]
 #[no_mangle]
 #[link_section = ".UserExceptionVector.text"]
 pub unsafe extern "C" fn _UserExceptionVector() -> ! {
     asm!("wsr.excsave1 a0"); /* preserve a0 */
+    // TODO this doesn't work, we cannot call into Rust functions here: see idf asm
     asm!("call0 _rust_user_exc"); /* _UserExceptionVector must be < 64 bytes, jump to new method to ensure that */
+    loop {} /* call0 is a jump, can't get here */
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".DoubleExceptionVector.text"]
+pub unsafe extern "C" fn _DoubleExceptionVector() -> ! {
     loop {} /* call0 is a jump, can't get here */
 }
