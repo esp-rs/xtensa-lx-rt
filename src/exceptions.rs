@@ -83,7 +83,6 @@ pub unsafe extern "C" fn _rust_user_exc() {
 }
 
 /* Raw vector handlers */
-// TODO window vectors
 // macros this?
 
 #[naked]
@@ -150,4 +149,115 @@ pub unsafe extern "C" fn _UserExceptionVector() -> ! {
 #[link_section = ".DoubleExceptionVector.text"]
 pub unsafe extern "C" fn _DoubleExceptionVector() -> ! {
     loop {} /* call0 is a jump, can't get here */
+}
+
+// TODO seems ret.w is inserted at the end of the window execeptions.. is that okay?
+#[naked]
+#[no_mangle]
+#[link_section = ".WindowOverflow4.text"]
+pub unsafe extern "C" fn _WindowOverflow4() {
+    asm!(r#"
+        s32e    a0, a5, -16
+        s32e    a1, a5, -12
+        s32e    a2, a5,  -8
+        s32e    a3, a5,  -4
+        rfwo
+    "#);
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".WindowUnderflow4.text"]
+pub unsafe extern "C" fn _WindowUnderflow4() {
+    asm!(r#"
+        l32e    a1, a5, -12
+        l32e    a0, a5, -16
+        l32e    a2, a5,  -8
+        l32e    a3, a5,  -4
+        rfwu
+    "#);
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".WindowOverflow8.text"]
+pub unsafe extern "C" fn _WindowOverflow8() {
+    asm!(r#"
+        s32e    a0, a9, -16
+        l32e    a0, a1, -12
+                        
+        s32e    a1, a9, -12
+        s32e    a2, a9,  -8
+        s32e    a3, a9,  -4
+        s32e    a4, a0, -32
+        s32e    a5, a0, -28
+        s32e    a6, a0, -24
+        s32e    a7, a0, -20
+        rfwo
+    "#);
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".WindowUnderflow8.text"]
+pub unsafe extern "C" fn _WindowUnderflow8() {
+    asm!(r#"
+        l32e    a0, a9, -16
+        l32e    a1, a9, -12
+        l32e    a2, a9,  -8
+        l32e    a7, a1, -12
+                        
+        l32e    a3, a9,  -4
+        l32e    a4, a7, -32
+        l32e    a5, a7, -28
+        l32e    a6, a7, -24
+        l32e    a7, a7, -20
+        rfwu
+    "#);
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".WindowOverflow12.text"]
+pub unsafe extern "C" fn _WindowOverflow12() {
+    asm!(r#"
+        s32e    a0,  a13, -16
+        l32e    a0,  a1,  -12
+                            
+        s32e    a1,  a13, -12
+        s32e    a2,  a13,  -8
+        s32e    a3,  a13,  -4
+        s32e    a4,  a0,  -48
+        s32e    a5,  a0,  -44
+        s32e    a6,  a0,  -40
+        s32e    a7,  a0,  -36
+        s32e    a8,  a0,  -32
+        s32e    a9,  a0,  -28
+        s32e    a10, a0,  -24
+        s32e    a11, a0,  -20
+        rfwo
+    "#);
+}
+
+#[naked]
+#[no_mangle]
+#[link_section = ".WindowUnderflow12.text"]
+pub unsafe extern "C" fn _WindowUnderflow12() {
+    asm!(r#"
+        l32e    a0,  a13, -16
+        l32e    a1,  a13, -12
+        l32e    a2,  a13,  -8
+        l32e    a11, a1,  -12
+                            
+        l32e    a3,  a13,  -4
+        l32e    a4,  a11, -48
+        l32e    a5,  a11, -44
+        l32e    a6,  a11, -40
+        l32e    a7,  a11, -36
+        l32e    a8,  a11, -32
+        l32e    a9,  a11, -28
+        l32e    a10, a11, -24
+        l32e    a11, a11, -20
+        rfwu
+    "#);
 }

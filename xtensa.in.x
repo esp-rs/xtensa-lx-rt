@@ -11,7 +11,17 @@ SECTIONS {
   {
     _init_start = ABSOLUTE(.);
     . = 0x0;
-    KEEP(*(.WindowVectors.text));
+    KEEP(*(.WindowOverflow4.text));
+    . = 0x40;
+    KEEP(*(.WindowUnderflow4.text));
+    . = 0x80;
+    KEEP(*(.WindowOverflow8.text));
+    . = 0xC0;
+    KEEP(*(.WindowUnderflow8.text));
+    . = 0x100;
+    KEEP(*(.WindowOverflow12.text));
+    . = 0x140;
+    KEEP(*(.WindowUnderflow12.text));
     . = 0x180;
     KEEP(*(.Level2InterruptVector.text));
     . = 0x1c0;

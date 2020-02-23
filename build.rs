@@ -5,12 +5,12 @@ use std::path::PathBuf;
 
 fn main() {
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
-
+    // let window_vectors = format!("bin/{}.a", "window_vectors");
     // fs::copy(
-    //         format!("bin/{}.a", "xtensa_vectors"),
-    //         out.join("libxtensa_vectors.a"),
+    //         &window_vectors,
+    //         out.join("libwindow_vectors.a"),
     //     ).unwrap();
-    //     println!("cargo:rustc-link-lib=static=xtensa_vectors");
+    //     println!("cargo:rustc-link-lib=static=window_vectors");
 
     // Put the linker script somewhere the linker can find it
     File::create(out.join("link.x"))
@@ -22,4 +22,5 @@ fn main() {
     // Only re-run the build script when memory.x is changed,
     // instead of when any part of the source code changes.
     println!("cargo:rerun-if-changed=xtensa.in.x");
+    // println!("cargo:rerun-if-changed={}", window_vectors);
 }
