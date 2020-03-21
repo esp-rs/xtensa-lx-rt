@@ -8,7 +8,7 @@
 /// # Example
 ///
 /// ``` no_run
-/// use cortex_m::singleton;
+/// use xtensa_lx6_rt::singleton;
 ///
 /// fn main() {
 ///     // OK if `main` is executed only once
