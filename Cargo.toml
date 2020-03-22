@@ -1,27 +1,19 @@
 [package]
 name = "xtensa-lx6-rt"
-version = "0.1.0"
-authors = ["Scott Mabin <scott@mabez.dev>"]
+version = "0.2.0"
+description = "Low level access for xtensa lx6 processors"
+categories = ["embedded", "hardware-support", "no-std"]
+keywords = ["xtensa", "lx6", "register", "peripheral"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/esp-rs/xtensa-lx6-rt"
+authors = [
+    "Scott Mabin <scott@mabez.dev>", 
+    "Arjan Mels <arjan@mels.email>",
+]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+links = "xtensa-lx6-rt" # prevent multiple versions of this crate to be linked together
 
 [dependencies]
-r0 = "0.2.2"
-
-[profile.dev]
-lto = true 
-incremental = false
-# debug = false # debug adds frame pointers - which must be omitted
-codegen-units = 1
-
-[profile.release]
-lto = true
-incremental = false
-debug = true
-# debug = false # debug adds frame pointers - which must be omitted
-codegen-units = 1
-
-[package.metadata.cargo-xbuild]
-memcpy = true
-sysroot_path = "target/sysroot"
+r0 = "1.0.0"
+bare-metal = { version = "0.2.0", features = ["const-fn"] }

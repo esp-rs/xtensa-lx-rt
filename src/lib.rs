@@ -1,7 +1,13 @@
 #![no_std]
 #![feature(asm)]
 
+extern crate bare_metal;
+
 use r0;
+pub mod interrupt;
+
+#[macro_use]
+mod macros;
 
 #[doc(hidden)]
 #[no_mangle]
@@ -40,6 +46,16 @@ pub fn get_cycle_count() -> u32 {
     let x: u32;
     unsafe { asm!("rsr.ccount a2" : "={a2}"(x) ) };
     x
+}
+
+/// cycle accurate delay using the cycle counter register
+pub fn delay(clocks: u32) {
+    let start = get_cycle_count();
+    loop {
+        if get_cycle_count().wrapping_sub(start) >= clocks {
+            break;
+        }
+    }
 }
 
 /// Get the id of the current core
