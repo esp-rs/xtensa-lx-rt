@@ -63,7 +63,7 @@ pub fn get_core_id() -> u32 {
     let x: u32;
     unsafe { asm!("rsr.prid a2" : "={a2}"(x) ) };
     // 0xCDCD for the PRO core (core 0)
-    // 0xABAB for the APP core (core 0)
+    // 0xABAB for the APP core (core 1)
     // esp-idf uses bit 13 to distinguish
-    x & (1 << 13)
+    (x >> 13) & 1
 }
