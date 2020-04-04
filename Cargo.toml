@@ -17,3 +17,4 @@ links = "xtensa-lx6-rt" # prevent multiple versions of this crate to be linked t
 [dependencies]
 r0 = "1.0.0"
 bare-metal = { version = "0.2.0", features = ["const-fn"] }
+xtensa-lx6-rt-proc-macros = { path = "procmacros" }

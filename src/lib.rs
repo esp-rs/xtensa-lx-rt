@@ -6,6 +6,10 @@ extern crate bare_metal;
 use r0;
 pub mod interrupt;
 
+extern crate xtensa_lx6_rt_proc_macros as proc_macros;
+
+pub use proc_macros::entry;
+
 #[macro_use]
 mod macros;
 
