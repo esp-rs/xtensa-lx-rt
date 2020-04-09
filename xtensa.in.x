@@ -7,44 +7,45 @@ ENTRY(Reset)
 /* Define output sections */
 SECTIONS {
 
-  .iram.text :
+  .text :
   {
     _stext = .;
     _text_start = ABSOLUTE(.);
     *(.literal .text .literal.* .text.*)
     _text_end = ABSOLUTE(.);
     _etext = .;
-  } > iram_seg
+  } > ROTEXT
 
-  /* Shared RAM */
-  .dram0.bss (NOLOAD) :
+  .rodata :
+  {
+    . = ALIGN (8);
+    _rodata_start = ABSOLUTE(.);
+    *(.rodata .rodata.*)
+    _rodata_end = ABSOLUTE(.);
+  } > RODATA
+
+  .data :
+  {
+    . = ALIGN (8);
+    _data_start = ABSOLUTE(.);
+    *(.data .data.*)
+    _data_end = ABSOLUTE(.);
+  } > RWDATA
+
+  _sidata = LOADADDR(.data);
+
+  .bss (NOLOAD) :
   {
     . = ALIGN (8);
     _bss_start = ABSOLUTE(.);
-    *(.bss)
-    *(.bss.*)
-    . = ALIGN (8);
+    *(.bss .bss.*)
     _bss_end = ABSOLUTE(.);
-  } >dram_seg
+  } > RWDATA
 
-  .dram0.data :
+  .heap_start (NOLOAD) :
   {
-    _data_start = ABSOLUTE(.);
-    *(.data)
-    *(.data.*)
-    _data_end = ABSOLUTE(.);
-  } >dram_seg
-
-  _sidata = LOADADDR(.dram0.data);
-
-  .dram0.rodata :
-  {
-    _rodata_start = ABSOLUTE(.);
-    *(.rodata)
-    *(.rodata.*)
-    _rodata_end = ABSOLUTE(.);
-    . = ALIGN(4);
+    . = ALIGN (8);
     _heap_start = ABSOLUTE(.);
-  } >dram_seg
+  } > RWDATA
 
 }
