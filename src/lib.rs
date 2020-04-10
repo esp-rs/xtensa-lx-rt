@@ -9,9 +9,16 @@ pub mod interrupt;
 extern crate xtensa_lx6_rt_proc_macros as proc_macros;
 
 pub use proc_macros::entry;
+pub use proc_macros::pre_init;
+pub use r0::init_data;
+pub use r0::zero_bss;
 
 #[macro_use]
 mod macros;
+
+#[doc(hidden)]
+#[no_mangle]
+pub unsafe extern "C" fn DefaultPreInit() {}
 
 #[doc(hidden)]
 #[no_mangle]
@@ -24,7 +31,7 @@ pub unsafe extern "C" fn Reset() -> ! {
 
         static mut _data_start: u32;
         static mut _data_end: u32;
-        static _sidata: u32;
+        static _data_start_loadaddr: u32;
 
     }
 
@@ -32,15 +39,15 @@ pub unsafe extern "C" fn Reset() -> ! {
         // This symbol will be provided by the user via `#[entry]`
         fn main() -> !;
 
-    // This symbol will be provided by the user via `#[pre_init]`
-    // fn __pre_init();
+        // This symbol will be provided by the user via `#[pre_init]`
+        fn __pre_init();
     }
 
-    // __pre_init();
+    __pre_init();
 
     // Initialize RAM
     r0::zero_bss(&mut _bss_start, &mut _bss_end);
-    r0::init_data(&mut _data_start, &mut _data_end, &_sidata);
+    r0::init_data(&mut _data_start, &mut _data_end, &_data_start_loadaddr);
 
     main()
 }
