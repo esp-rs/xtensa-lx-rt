@@ -3,6 +3,7 @@
 //! Do not use this crate directly.
 
 #![deny(warnings)]
+#![allow(unused_braces)]
 
 extern crate proc_macro;
 
@@ -15,6 +16,7 @@ use syn::{
     ItemStatic, ReturnType, Stmt, Type, Visibility,
 };
 
+/// Marks a function as the main function to be called on program start
 #[proc_macro_attribute]
 pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut f = parse_macro_input!(input as ItemFn);
@@ -117,6 +119,8 @@ pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Marks a function as the pre_init function. This function is called before main and *before
+/// the memory is initialized*.
 #[proc_macro_attribute]
 pub fn pre_init(args: TokenStream, input: TokenStream) -> TokenStream {
     let f = parse_macro_input!(input as ItemFn);
