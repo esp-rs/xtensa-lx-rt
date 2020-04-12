@@ -31,7 +31,7 @@ pub unsafe extern "C" fn Reset() -> ! {
 
         static mut _data_start: u32;
         static mut _data_end: u32;
-        static _data_start_loadaddr: u32;
+        static _data_load: u32;
 
     }
 
@@ -47,7 +47,8 @@ pub unsafe extern "C" fn Reset() -> ! {
 
     // Initialize RAM
     r0::zero_bss(&mut _bss_start, &mut _bss_end);
-    r0::init_data(&mut _data_start, &mut _data_end, &_data_start_loadaddr);
+
+    // Copy of data segment is done by bootloader
 
     main()
 }
@@ -56,6 +57,23 @@ pub unsafe extern "C" fn Reset() -> ! {
 pub fn get_cycle_count() -> u32 {
     let x: u32;
     unsafe { asm!("rsr.ccount a2" : "={a2}"(x) ) };
+    x
+}
+
+/// Get the core cycle count
+#[inline(always)]
+pub fn get_program_counter() -> usize {
+    let x: usize;
+    unsafe {
+        asm!("
+            mov a8,a0
+            call0 1f
+            .align 4
+            1: 
+            mov a9,a0
+            mov a0,a8
+            " : "={a9}"(x)::"a8" )
+    };
     x
 }
 
