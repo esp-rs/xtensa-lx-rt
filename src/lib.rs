@@ -60,7 +60,15 @@ pub fn get_cycle_count() -> u32 {
     x
 }
 
-/// Get the core cycle count
+/// Get the core stack pointer
+#[inline(always)]
+pub fn get_stack_pointer() -> usize {
+    let x: usize;
+    unsafe { asm!("mov a2,sp" : "={a2}"(x) ) };
+    x
+}
+
+/// Get the core current program counter
 #[inline(always)]
 pub fn get_program_counter() -> usize {
     let x: usize;
