@@ -1,9 +1,10 @@
 
+/* before memory.x to allow override */
+ENTRY(Reset)
 
 INCLUDE memory.x
 
-ENTRY(Reset)
-
+/* after memory.x to allow override */
 PROVIDE(__pre_init = DefaultPreInit); 
 
 /* Define output sections */
