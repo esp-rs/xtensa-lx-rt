@@ -23,16 +23,10 @@ pub unsafe extern "C" fn DefaultPreInit() {}
 #[doc(hidden)]
 #[no_mangle]
 pub unsafe extern "C" fn Reset() -> ! {
+    // These symbols come from `link.x`
     extern "C" {
-
-        // These symbols come from `link.x`
         static mut _bss_start: u32;
         static mut _bss_end: u32;
-
-        static mut _data_start: u32;
-        static mut _data_end: u32;
-        static _data_load: u32;
-
     }
 
     extern "Rust" {
