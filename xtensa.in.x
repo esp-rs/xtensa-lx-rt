@@ -36,8 +36,6 @@ SECTIONS {
     _data_end = ABSOLUTE(.);
   } > RWDATA AT > RODATA
 
-  _data_load = LOADADDR(.data);
-
   .bss (NOLOAD) :
   {
     _bss_start = ABSOLUTE(.);

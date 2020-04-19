@@ -62,16 +62,30 @@ pub fn get_cycle_count() -> u32 {
 
 /// Get the core stack pointer
 #[inline(always)]
-pub fn get_stack_pointer() -> usize {
-    let x: usize;
+pub fn get_stack_pointer() -> *const u32 {
+    let x: *const u32;
     unsafe { asm!("mov a2,sp" : "={a2}"(x) ) };
     x
 }
 
+/// Set the core stack pointer
+///
+/// *This is highly unsafe!*
+/// It should be used with care at e.g. program start or when building a task scheduler
+///
+/// `stack` pointer to the non-inclusive end of the stack (must be 16-byte aligned)
+#[inline(always)]
+pub unsafe fn set_stack_pointer(stack: *mut u32) {
+    asm!("
+        movi a0,0
+        mov sp,a2
+        " :: "{a2}"(stack) );
+}
+
 /// Get the core current program counter
 #[inline(always)]
-pub fn get_program_counter() -> usize {
-    let x: usize;
+pub fn get_program_counter() -> *const u32 {
+    let x: *const u32;
     unsafe {
         asm!("
             mov a8,a0
