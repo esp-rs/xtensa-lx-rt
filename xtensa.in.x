@@ -50,11 +50,17 @@ SECTIONS {
     *(.noinit .noinit.*)
   } > RWDATA
 
-  /* must be last segment using RWDATA */
+ /* must be last segment using RWTEXT */
+  .text_heap_start (NOLOAD) :
+  {
+    . = ALIGN (4);
+    _text_heap_start = ABSOLUTE(.);
+  } > RWTEXT
+
+ /* must be last segment using RWDATA */
   .heap_start (NOLOAD) :
   {
     . = ALIGN (4);
     _heap_start = ABSOLUTE(.);
   } > RWDATA
-
 }
