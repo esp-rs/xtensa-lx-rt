@@ -105,10 +105,20 @@ pub fn delay(clocks: u32) {
 
 /// Get the id of the current core
 pub fn get_core_id() -> u32 {
-    let x: u32;
+    let mut x: u32;
     unsafe { asm!("rsr.prid a2" : "={a2}"(x) ) };
     // 0xCDCD for the PRO core (core 0)
     // 0xABAB for the APP core (core 1)
     // esp-idf uses bit 13 to distinguish
     (x >> 13) & 1
+}
+
+const XDM_OCD_DCR_SET: u32 = 0x10200C;
+const DCR_ENABLEOCD: u32 = 0x01;
+
+pub fn is_debugger_attached() -> bool {
+    let reg: u32 = XDM_OCD_DCR_SET;
+    let mut x: u32;
+    unsafe { asm!("rer a2,a3" : "={a2}"(x):"{a3}"(reg) ) };
+    (x & DCR_ENABLEOCD) != 0
 }
