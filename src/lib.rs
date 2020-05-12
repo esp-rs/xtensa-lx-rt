@@ -50,7 +50,7 @@ pub unsafe extern "C" fn Reset() -> ! {
 /// Get the core cycle count
 pub fn get_cycle_count() -> u32 {
     let x: u32;
-    unsafe { asm!("rsr.ccount a2" : "={a2}"(x) ) };
+    unsafe { asm!("rsr.ccount $0" : "=r"(x) ) };
     x
 }
 
@@ -58,7 +58,7 @@ pub fn get_cycle_count() -> u32 {
 #[inline(always)]
 pub fn get_stack_pointer() -> *const u32 {
     let x: *const u32;
-    unsafe { asm!("mov a2,sp" : "={a2}"(x) ) };
+    unsafe { asm!("mov $0,sp" : "=r"(x) ) };
     x
 }
 
@@ -72,23 +72,24 @@ pub fn get_stack_pointer() -> *const u32 {
 pub unsafe fn set_stack_pointer(stack: *mut u32) {
     asm!("
         movi a0,0
-        mov sp,a2
-        " :: "{a2}"(stack) );
+        mov sp,$0
+        " :: "r"(stack):"a0" );
 }
 
 /// Get the core current program counter
 #[inline(always)]
 pub fn get_program_counter() -> *const u32 {
     let x: *const u32;
+    let _y: u32;
     unsafe {
         asm!("
-            mov a8,a0
+            mov $1,a0
             call0 1f
             .align 4
             1: 
-            mov a9,a0
-            mov a0,a8
-            " : "={a9}"(x)::"a8" )
+            mov $0,a0
+            mov a0,$1
+            " : "=r"(x),"=r"(_y)::"a0" )
     };
     x
 }
@@ -106,7 +107,7 @@ pub fn delay(clocks: u32) {
 /// Get the id of the current core
 pub fn get_core_id() -> u32 {
     let mut x: u32;
-    unsafe { asm!("rsr.prid a2" : "={a2}"(x) ) };
+    unsafe { asm!("rsr.prid $0" : "=r"(x) ) };
     // 0xCDCD for the PRO core (core 0)
     // 0xABAB for the APP core (core 1)
     // esp-idf uses bit 13 to distinguish
@@ -116,9 +117,10 @@ pub fn get_core_id() -> u32 {
 const XDM_OCD_DCR_SET: u32 = 0x10200C;
 const DCR_ENABLEOCD: u32 = 0x01;
 
+/// Returns true if a debugger is attached
 pub fn is_debugger_attached() -> bool {
     let reg: u32 = XDM_OCD_DCR_SET;
     let mut x: u32;
-    unsafe { asm!("rer a2,a3" : "={a2}"(x):"{a3}"(reg) ) };
+    unsafe { asm!("rer $0,$1" : "=r"(x):"r"(reg) ) };
     (x & DCR_ENABLEOCD) != 0
 }
