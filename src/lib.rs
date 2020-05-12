@@ -60,14 +60,16 @@ pub unsafe extern "C" fn Reset() -> ! {
 }
 
 /// Move the vector base
+#[inline]
 pub unsafe fn set_vecbase(base: *const u32) {
     asm!("wsr.vecbase $0" ::"r"(base) :: "volatile");
 }
 
 /// Get the core cycle count
+#[inline]
 pub fn get_cycle_count() -> u32 {
     let x: u32;
-    unsafe { asm!("rsr.ccount $0" : "=r"(x) ) };
+    unsafe { asm!("rsr.ccount $0" : "=r"(x) ::: "volatile" ) };
     x
 }
 
@@ -75,7 +77,7 @@ pub fn get_cycle_count() -> u32 {
 #[inline(always)]
 pub fn get_stack_pointer() -> *const u32 {
     let x: *const u32;
-    unsafe { asm!("mov $0,sp" : "=r"(x) ) };
+    unsafe { asm!("mov $0,sp" : "=r"(x) ::: "volatile") };
     x
 }
 
@@ -90,7 +92,7 @@ pub unsafe fn set_stack_pointer(stack: *mut u32) {
     asm!("
         movi a0,0
         mov sp,$0
-        " :: "r"(stack):"a0" );
+        " :: "r"(stack):"a0" ::: "volatile" );
 }
 
 /// Get the core current program counter
@@ -106,12 +108,13 @@ pub fn get_program_counter() -> *const u32 {
             1: 
             mov $0,a0
             mov a0,$1
-            " : "=r"(x),"=r"(_y)::"a0" )
+            " : "=r"(x),"=r"(_y)::"a0" : "volatile" )
     };
     x
 }
 
 /// cycle accurate delay using the cycle counter register
+#[inline]
 pub fn delay(clocks: u32) {
     let start = get_cycle_count();
     loop {
@@ -122,9 +125,10 @@ pub fn delay(clocks: u32) {
 }
 
 /// Get the id of the current core
+#[inline]
 pub fn get_core_id() -> u32 {
     let mut x: u32;
-    unsafe { asm!("rsr.prid $0" : "=r"(x) ) };
+    unsafe { asm!("rsr.prid $0" : "=r"(x) ::: "volatile") };
     // 0xCDCD for the PRO core (core 0)
     // 0xABAB for the APP core (core 1)
     // esp-idf uses bit 13 to distinguish
@@ -135,9 +139,9 @@ const XDM_OCD_DCR_SET: u32 = 0x10200C;
 const DCR_ENABLEOCD: u32 = 0x01;
 
 /// Returns true if a debugger is attached
+#[inline]
 pub fn is_debugger_attached() -> bool {
-    let reg: u32 = XDM_OCD_DCR_SET;
     let mut x: u32;
-    unsafe { asm!("rer $0,$1" : "=r"(x):"r"(reg) ) };
+    unsafe { asm!("rer $0,$1" : "=r"(x): "r"(XDM_OCD_DCR_SET) :: "volatile" ) };
     (x & DCR_ENABLEOCD) != 0
 }

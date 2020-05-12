@@ -5,28 +5,7 @@ pub use bare_metal::CriticalSection;
 /// Disables all interrupts and return the previous settings
 #[inline]
 pub fn disable() -> u32 {
-    unsafe { disable_mask(!0) }
-}
-
-/// Disables specific  interrupts and returns the previous settings
-/// # Safety
-///
-/// - Do not call this function inside an `interrupt::free` critical section
-#[inline]
-pub unsafe fn disable_mask(mask: u32) -> u32 {
-    asm!("mov a2, $0" :: "r"(mask) :: "volatile"); /* enabled (1 << 6) */
-    asm!("movi a3, 0" :::: "volatile");
-    asm!("xsr.intenable a3" :::: "volatile"); /* Disable all interrupts */
-    asm!("rsync");
-    asm!("xor a2, a2, a2" :::: "volatile"); /* invert bit mask */
-    asm!("and a2, a3, a2" :::: "volatile"); /* clear bits in mask */
-    asm!("wsr.intenable a2" :::: "volatile"); /* Re-enable interrupts */
-    asm!("rsync");
-
-    let prev: u32;
-    asm!("mov a2, a3" : "={a2}"(prev) ::: "volatile"); /* return prev mask */
-
-    prev
+    unsafe { set_mask(0) }
 }
 
 /// Enables all the interrupts
@@ -36,7 +15,38 @@ pub unsafe fn disable_mask(mask: u32) -> u32 {
 /// - Do not call this function inside an `interrupt::free` critical section
 #[inline]
 pub unsafe fn enable() -> u32 {
-    enable_mask(!0)
+    set_mask(!0)
+}
+
+/// Enables specific interrupts and returns the previous setting
+///
+/// # Safety
+///
+/// - Do not call this function inside an `interrupt::free` critical section
+#[inline]
+pub unsafe fn set_mask(mut mask: u32) -> u32 {
+    asm!("
+        xsr $0, intenable
+        rsync
+        " :"=r"(mask) :"0"(mask):: "volatile");
+    mask
+}
+
+/// Disables specific  interrupts and returns the previous settings
+#[inline]
+pub fn disable_mask(mask: u32) -> u32 {
+    let mut prev: u32 = 0;
+    let _dummy: u32;
+    unsafe {
+        asm!("
+        xsr.intenable $0  // get mask and temporarily disable interrupts 
+        and $1,$1,$0
+        rsync
+        wsr.intenable $1
+        rsync
+    " : "+r"(prev),"=r"(_dummy) : "1"(!mask) ::"volatile");
+    }
+    prev
 }
 
 /// Enables specific interrupts and returns the previous setting
@@ -46,26 +56,24 @@ pub unsafe fn enable() -> u32 {
 /// - Do not call this function inside an `interrupt::free` critical section
 #[inline]
 pub unsafe fn enable_mask(mask: u32) -> u32 {
-    asm!("mov a2, $0" :: "r"(mask) :: "volatile"); /* enabled (1 << 6) */
-    asm!("movi a3, 0" :::: "volatile");
-    asm!("xsr.intenable a3" :::: "volatile"); /* Disable all interrupts */
-    asm!("rsync");
-    asm!("or a2, a3, a2" :::: "volatile"); /* set bits in mask */
-    asm!("wsr.intenable a2" :::: "volatile"); /* Re-enable interrupts */
-    asm!("rsync");
-
-    let prev: u32;
-    asm!("mov a2, a3" : "={a2}"(prev) ::: "volatile"); /* return prev mask */
-
+    let mut prev: u32 = 0;
+    let _dummy: u32;
+    asm!("
+        xsr.intenable $0 // get mask and temporarily disable interrupts
+        or $1,$1,$0
+        rsync
+        wsr.intenable $1
+        rsync
+    " : "+r"(prev),"=r"(_dummy) : "1"(mask)::"volatile");
     prev
 }
 
 /// Get current interrupt mask
 #[inline]
 pub fn get_mask() -> u32 {
-    let x: u32;
-    unsafe { asm!("rsr.intenable a2" : "={a2}"(x) ) };
-    x
+    let mask: u32;
+    unsafe { asm!("rsr.intenable $0" : "=r"(mask) ) };
+    mask
 }
 
 /// Execute closure `f` in an interrupt-free context.
