@@ -1,5 +1,8 @@
 #![no_std]
 #![feature(asm)]
+#![feature(global_asm)]
+#![feature(naked_functions)]
+#![feature(core_intrinsics)]
 
 extern crate bare_metal;
 
@@ -20,6 +23,8 @@ mod macros;
 #[no_mangle]
 pub unsafe extern "C" fn DefaultPreInit() {}
 
+pub mod exceptions;
+
 #[doc(hidden)]
 #[no_mangle]
 pub unsafe extern "C" fn Reset() -> ! {
@@ -27,6 +32,8 @@ pub unsafe extern "C" fn Reset() -> ! {
     extern "C" {
         static mut _bss_start: u32;
         static mut _bss_end: u32;
+
+        static mut _init_start: u32;
     }
 
     extern "Rust" {
@@ -44,7 +51,17 @@ pub unsafe extern "C" fn Reset() -> ! {
 
     // Copy of data segment is done by bootloader
 
-    main()
+    interrupt::disable();
+
+    let vecbase = &_init_start as *const u32;
+    set_vecbase(vecbase);
+
+    main();
+}
+
+/// Move the vector base
+pub unsafe fn set_vecbase(base: *const u32) {
+    asm!("wsr.vecbase $0" ::"r"(base) :: "volatile");
 }
 
 /// Get the core cycle count
