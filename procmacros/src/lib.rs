@@ -114,6 +114,7 @@ pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
             )
         }
 
+        #[inline(always)]
         #f
     )
     .into()
@@ -212,6 +213,7 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
             )
         }
 
+        #[inline(always)]
         #f
     )
     .into()
@@ -343,6 +345,7 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
             )
         }
 
+        #[inline(always)]
         #f
     )
     .into()
