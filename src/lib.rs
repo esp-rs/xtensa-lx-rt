@@ -147,3 +147,9 @@ pub fn is_debugger_attached() -> bool {
     unsafe { asm!("rer $0,$1" : "=r"(x): "r"(XDM_OCD_DCR_SET) :: "volatile" ) };
     (x & DCR_ENABLEOCD) != 0
 }
+
+/// Insert debug breakpoint
+#[inline(always)]
+pub fn debug_break() {
+    unsafe { asm!("break 1,15"::::"volatile") };
+}
