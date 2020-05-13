@@ -31,7 +31,19 @@ PROVIDE(__naked_level_7_interrupt = __default_naked_level_7_interrupt);
 
 
 /* needed to force inclusion of the vectors */
+EXTERN(__default_exception);
+EXTERN(__default_double_exception);
+EXTERN(__default_interrupt);
+
 EXTERN(__default_naked_exception);
+EXTERN(__default_naked_double_exception);
+EXTERN(__default_naked_level_2_interrupt);
+EXTERN(__default_naked_level_3_interrupt);
+EXTERN(__default_naked_level_4_interrupt);
+EXTERN(__default_naked_level_5_interrupt);
+EXTERN(__default_naked_level_6_interrupt);
+EXTERN(__default_naked_level_7_interrupt);
+
 
 /* Define output sections */
 SECTIONS {
