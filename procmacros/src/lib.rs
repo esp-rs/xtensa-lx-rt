@@ -263,14 +263,40 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let fspan = f.span();
 
-    let ident_s = format!("__level_{}_interrupt", level);
-
     // XXX should we blacklist other attributes?
+
+    if let Err(error) = check_attr_whitelist(&f.attrs, WhiteListCaller::Interrupt) {
+        return error;
+    }
+
+    let naked = f.attrs.iter().position(|x| eq(x, "naked")).is_some();
+
+    let ident_s = if naked {
+        format!("__naked_level_{}_interrupt", level)
+    } else {
+        format!("__level_{}_interrupt", level)
+    };
+
+    if naked && (level < 2 || level > 7) {
+        return parse::Error::new(
+            fspan,
+            "`#[naked]` `#[interrupt]` handlers must have interrupt level >=2 and <=7",
+        )
+        .to_compile_error()
+        .into();
+    } else if !naked && (level < 1 || level > 7) {
+        return parse::Error::new(
+            fspan,
+            "`#[interrupt]` handlers must have interrupt level >=1 and <=7",
+        )
+        .to_compile_error()
+        .into();
+    }
 
     let valid_signature = f.sig.constness.is_none()
         && f.vis == Visibility::Inherited
         && f.sig.abi.is_none()
-        && f.sig.inputs.len() == 1
+        && ((!naked && f.sig.inputs.len() == 1) || (naked && f.sig.inputs.len() == 0))
         && f.sig.generics.params.is_empty()
         && f.sig.generics.where_clause.is_none()
         && f.sig.variadic.is_none()
@@ -284,12 +310,21 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
         };
 
     if !valid_signature {
-        return parse::Error::new(
-            fspan,
-            "`#[interrupt]` handlers must have signature `[unsafe] fn(u32) [-> !]`",
-        )
-        .to_compile_error()
-        .into();
+        if naked {
+            return parse::Error::new(
+                fspan,
+                "`#[naked]` `#[interrupt]` handlers must have signature `[unsafe] fn() [-> !]`",
+            )
+            .to_compile_error()
+            .into();
+        } else {
+            return parse::Error::new(
+                fspan,
+                "`#[interrupt]` handlers must have signature `[unsafe] fn(u32) [-> !]`",
+            )
+            .to_compile_error()
+            .into();
+        }
     }
 
     let (statics, stmts) = match extract_static_muts(f.block.stmts.iter().cloned()) {
@@ -328,27 +363,41 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect::<Vec<_>>();
 
-    if let Err(error) = check_attr_whitelist(&f.attrs, WhiteListCaller::Interrupt) {
-        return error;
-    }
-
     let (ref cfgs, ref attrs) = extract_cfgs(f.attrs.clone());
 
-    quote!(
-        #(#cfgs)*
-        #(#attrs)*
-        #[doc(hidden)]
-        #[export_name = #ident_s]
-        pub unsafe extern "C" fn #tramp_ident(level: u32) {
-            #ident(level,
-                #(#resource_args),*
-            )
-        }
+    if naked {
+        quote!(
+            #(#cfgs)*
+            #(#attrs)*
+            #[doc(hidden)]
+            #[export_name = #ident_s]
+            pub unsafe extern "C" fn #tramp_ident() {
+                #ident(
+                    #(#resource_args),*
+                )
+            }
 
-        #[inline(always)]
-        #f
-    )
-    .into()
+            #[inline(always)]
+            #f
+        )
+        .into()
+    } else {
+        quote!(
+            #(#cfgs)*
+            #(#attrs)*
+            #[doc(hidden)]
+            #[export_name = #ident_s]
+            pub unsafe extern "C" fn #tramp_ident(level: u32) {
+                #ident(level,
+                    #(#resource_args),*
+                )
+            }
+
+            #[inline(always)]
+            #f
+        )
+        .into()
+    }
 }
 
 /// Marks a function as the pre_init function. This function is called before main and *before
@@ -495,6 +544,10 @@ fn check_attr_whitelist(attrs: &[Attribute], caller: WhiteListCaller) -> Result<
                 "this attribute is not allowed on an exception handler controlled by xtensa-lx6-rt"
             }
             WhiteListCaller::Interrupt => {
+                if eq(&attr, "naked") {
+                    continue 'o;
+                }
+
                 "this attribute is not allowed on an interrupt handler controlled by xtensa-lx6-rt"
             }
             WhiteListCaller::PreInit => {
