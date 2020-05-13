@@ -12,6 +12,8 @@ pub mod interrupt;
 extern crate xtensa_lx6_rt_proc_macros as proc_macros;
 
 pub use proc_macros::entry;
+pub use proc_macros::exception;
+pub use proc_macros::interrupt;
 pub use proc_macros::pre_init;
 pub use r0::init_data;
 pub use r0::zero_bss;
