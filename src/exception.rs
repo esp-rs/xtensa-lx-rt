@@ -1,4 +1,7 @@
-//! Xtensa LX6 Exception handling (Specialized for esp32 LX6 configuration)
+//! Exception handling
+//!
+//! Currently specialized for esp32 LX6 configuration: which extra registers to store,
+//! how many interrupt levels etc.
 //!
 //! First level interrupts and exceptions save full processor state to the user stack.
 //! This includes the coprocessor registers contrary to the esp-idf where these are lazily saved.
@@ -15,101 +18,141 @@
 //! PS.EXCM is set to 0 to be able to handle WindowUnderflow/Overflow and recursive exceptions will
 //! happen instead.
 //!
-//! In various places call0 are used as long jump: j.l syntax is not supported and call0
-//! can always be expanded to mov a0,label; call a0. Care must be taken since A0 is overwritten.
+//! In various places call0 are used as long jump: `j.l` syntax is not supported and `call0`
+//! can always be expanded to `mov a0,label; call a0`. Care must be taken since A0 is overwritten.
 //!
 
 mod assembly;
 
-/// EXCCAUSE register values:
+/// EXCCAUSE register values
 ///
-/// General Exception Causes
-/// (values of EXCCAUSE special register set by general exceptions,
-///  which vector to the user, kernel, or double-exception vectors).
+/// General Exception Causes. (Values of EXCCAUSE special register set by general exceptions,
+/// which vector to the user, kernel, or double-exception vectors).
+///
 #[allow(unused)]
 #[derive(Debug)]
 pub enum ExceptionCause {
-    Illegal = 0,             // Illegal Instruction
-    Syscall = 1,             // System Call (Syscall Instruction)
-    InstrError = 2,          // Instruction Fetch Error
-    LoadStoreError = 3,      // Load Store Error
-    LevelOneInterrupt = 4,   // Level 1 Interrupt
-    Alloca = 5,              // Stack Extension Assist (Movsp Instruction) For Alloca
-    DivideByZero = 6,        // Integer Divide By Zero
-    Speculation = 7,         // Use Of Failed Speculative Access (Not Implemented)
-    Privileged = 8,          // Privileged Instruction
-    Unaligned = 9,           // Unaligned Load Or Store
-    Reserved10 = 10,         // Reserved
-    Reserved11 = 11,         // Reserved
-    InstrDataError = 12,     // Pif Data Error On Instruction Fetch (Rb-200x And Later)
-    LoadStoreDataError = 13, // Pif Data Error On Load Or Store (Rb-200x And Later)
-    InstrAddrError = 14,     // Pif Address Error On Instruction Fetch (Rb-200x And Later)
-    LoadStoreAddrError = 15, // Pif Address Error On Load Or Store (Rb-200x And Later)
-    ItlbMiss = 16,           // Itlb Miss (No Itlb Entry Matches, Hw Refill Also Missed)
-    ItlbMultiHit = 17,       // Itlb Multihit (Multiple Itlb Entries Match)
-    InstrRing = 18,          // Ring Privilege Violation On Instruction Fetch
-    Reserved19 = 19,         // Size Restriction On Ifetch (Not Implemented)
-    InstrProhibited = 20,    // Cache Attribute Does Not Allow Instruction Fetch
-    Reserved21 = 21,         // Reserved
-    Reserved22 = 22,         // Reserved
-    Reserved23 = 23,         // Reserved
-    DtlbMiss = 24,           // Dtlb Miss (No Dtlb Entry Matches, Hw Refill Also Missed)
-    DtlbMultiHit = 25,       // Dtlb Multihit (Multiple Dtlb Entries Match)
-    LoadStoreRing = 26,      // Ring Privilege Violation On Load Or Store
-    Reserved27 = 27,         // Size Restriction On Load/Store (Not Implemented)
-    LoadProhibited = 28,     // Cache Attribute Does Not Allow Load
-    StoreProhibited = 29,    // Cache Attribute Does Not Allow Store
-    Reserved30 = 30,         // Reserved
-    Reserved31 = 31,         // Reserved
-    Cp0Disabled = 32,        // Access To Coprocessor 0 When Disabled
-    Cp1Disabled = 33,        // Access To Coprocessor 1 When Disabled
-    Cp2Disabled = 34,        // Access To Coprocessor 2 When Disabled
-    Cp3Disabled = 35,        // Access To Coprocessor 3 When Disabled
-    Cp4Disabled = 36,        // Access To Coprocessor 4 When Disabled
-    Cp5Disabled = 37,        // Access To Coprocessor 5 When Disabled
-    Cp6Disabled = 38,        // Access To Coprocessor 6 When Disabled
-    Cp7Disabled = 39,        // Access to Coprocessor 7 when disabled
+    /// Illegal Instruction
+    Illegal = 0,
+    /// System Call (Syscall Instruction)
+    Syscall = 1,
+    /// Instruction Fetch Error
+    InstrError = 2,
+    /// Load Store Error
+    LoadStoreError = 3,
+    /// Level 1 Interrupt
+    LevelOneInterrupt = 4,
+    /// Stack Extension Assist (movsp Instruction) For Alloca
+    Alloca = 5,
+    /// Integer Divide By Zero
+    DivideByZero = 6,
+    /// Use Of Failed Speculative Access (Not Implemented)
+    Speculation = 7,
+    /// Privileged Instruction
+    Privileged = 8,
+    /// Unaligned Load Or Store
+    Unaligned = 9,
+    /// Reserved
+    Reserved10 = 10,
+    /// Reserved
+    Reserved11 = 11,
+    /// Pif Data Error On Instruction Fetch (Rb-200x And Later)
+    InstrDataError = 12,
+    /// Pif Data Error On Load Or Store (Rb-200x And Later)
+    LoadStoreDataError = 13,
+    /// Pif Address Error On Instruction Fetch (Rb-200x And Later)
+    InstrAddrError = 14,
+    /// Pif Address Error On Load Or Store (Rb-200x And Later)
+    LoadStoreAddrError = 15,
+    /// Itlb Miss (No Itlb Entry Matches, Hw Refill Also Missed)
+    ItlbMiss = 16,
+    /// Itlb Multihit (Multiple Itlb Entries Match)
+    ItlbMultiHit = 17,
+    /// Ring Privilege Violation On Instruction Fetch
+    InstrRing = 18,
+    /// Size Restriction On Ifetch (Not Implemented)
+    Reserved19 = 19,
+    /// Cache Attribute Does Not Allow Instruction Fetch
+    InstrProhibited = 20,
+    /// Reserved
+    Reserved21 = 21,
+    /// Reserved
+    Reserved22 = 22,
+    /// Reserved
+    Reserved23 = 23,
+    /// Dtlb Miss (No Dtlb Entry Matches, Hw Refill Also Missed)
+    DtlbMiss = 24,
+    /// Dtlb Multihit (Multiple Dtlb Entries Match)
+    DtlbMultiHit = 25,
+    /// Ring Privilege Violation On Load Or Store
+    LoadStoreRing = 26,
+    /// Size Restriction On Load/Store (Not Implemented)
+    Reserved27 = 27,
+    /// Cache Attribute Does Not Allow Load
+    LoadProhibited = 28,
+    /// Cache Attribute Does Not Allow Store
+    StoreProhibited = 29,
+    /// Reserved
+    Reserved30 = 30,
+    /// Reserved
+    Reserved31 = 31,
+    /// Access To Coprocessor 0 When Disabled
+    Cp0Disabled = 32,
+    /// Access To Coprocessor 1 When Disabled
+    Cp1Disabled = 33,
+    /// Access To Coprocessor 2 When Disabled
+    Cp2Disabled = 34,
+    /// Access To Coprocessor 3 When Disabled
+    Cp3Disabled = 35,
+    /// Access To Coprocessor 4 When Disabled
+    Cp4Disabled = 36,
+    /// Access To Coprocessor 5 When Disabled
+    Cp5Disabled = 37,
+    /// Access To Coprocessor 6 When Disabled
+    Cp6Disabled = 38,
+    /// Access To Coprocessor 7 When Disabled
+    Cp7Disabled = 39,
 
     None = 255,
 }
 
 extern "Rust" {
-    // This symbol will be provided by the user via `#[exception]`
+    /// This symbol will be provided by the user via `#[exception]`
     fn __exception(cause: ExceptionCause);
-    // This symbol will be provided by the user via `#[exception(double)]`
+    /// No attribute is supplied for this symbol as the double exception can hardly occur
     fn __double_exception(cause: ExceptionCause);
 
-    // This symbol will be provided by the user via `#[interrupt(1)]`
+    /// This symbol will be provided by the user via `#[interrupt(1)]`
     fn __level_1_interrupt(level: u32);
-    // This symbol will be provided by the user via `#[interrupt(2)]`
+    /// This symbol will be provided by the user via `#[interrupt(2)]`
     fn __level_2_interrupt(level: u32);
-    // This symbol will be provided by the user via `#[interrupt(3)]`
+    /// This symbol will be provided by the user via `#[interrupt(3)]`
     fn __level_3_interrupt(level: u32);
-    // This symbol will be provided by the user via `#[interrupt(4)]`
+    /// This symbol will be provided by the user via `#[interrupt(4)]`
     fn __level_4_interrupt(level: u32);
-    // This symbol will be provided by the user via `#[interrupt(5)]`
+    /// This symbol will be provided by the user via `#[interrupt(5)]`
     fn __level_5_interrupt(level: u32);
-    // This symbol will be provided by the user via `#[interrupt(6)]`
+    /// This symbol will be provided by the user via `#[interrupt(6)]`
     fn __level_6_interrupt(level: u32);
-    // This symbol will be provided by the user via `#[interrupt(7)]`
+    /// This symbol will be provided by the user via `#[interrupt(7)]`
     fn __level_7_interrupt(level: u32);
 }
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-pub extern "C" fn __default_exception(cause: ExceptionCause) {
+extern "C" fn __default_exception(cause: ExceptionCause) {
     panic!("Exception: {:?}", cause)
 }
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-pub extern "C" fn __default_interrupt(level: u32) {
+extern "C" fn __default_interrupt(level: u32) {
     panic!("Interrupt: {:?}", level)
 }
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-pub extern "C" fn __default_double_exception(cause: ExceptionCause) {
+extern "C" fn __default_double_exception(cause: ExceptionCause) {
     panic!("Double Exception: {:?}", cause)
 }
 
@@ -125,7 +168,7 @@ pub extern "C" fn __default_double_exception(cause: ExceptionCause) {
 #[naked]
 #[no_mangle]
 #[link_section = ".KernelExceptionVector.text"]
-pub unsafe extern "C" fn _KernelExceptionVector() {
+unsafe extern "C" fn _KernelExceptionVector() {
     asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
@@ -141,7 +184,7 @@ pub unsafe extern "C" fn _KernelExceptionVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".UserExceptionVector.text"]
-pub unsafe extern "C" fn _UserExceptionVector() {
+unsafe extern "C" fn _UserExceptionVector() {
     asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
@@ -160,7 +203,7 @@ pub unsafe extern "C" fn _UserExceptionVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".DoubleExceptionVector.text"]
-pub unsafe extern "C" fn _DoubleExceptionVector() {
+unsafe extern "C" fn _DoubleExceptionVector() {
     asm!(
         "
     wsr a0, EXCSAVE1                   // preserve a0 (EXCSAVE1 can be reused as long as there
@@ -174,7 +217,7 @@ pub unsafe extern "C" fn _DoubleExceptionVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".Level2InterruptVector.text"]
-pub unsafe extern "C" fn _Level2InterruptVector() {
+unsafe extern "C" fn _Level2InterruptVector() {
     asm!(
         "
     wsr a0, EXCSAVE2 // preserve a0
@@ -186,7 +229,7 @@ pub unsafe extern "C" fn _Level2InterruptVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".Level3InterruptVector.text"]
-pub unsafe extern "C" fn _Level3InterruptVector() {
+unsafe extern "C" fn _Level3InterruptVector() {
     asm!(
         "
     wsr a0, EXCSAVE3 // preserve a0
@@ -198,7 +241,7 @@ pub unsafe extern "C" fn _Level3InterruptVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".Level4InterruptVector.text"]
-pub unsafe extern "C" fn _Level4InterruptVector() {
+unsafe extern "C" fn _Level4InterruptVector() {
     asm!(
         "
     wsr a0, EXCSAVE4 // preserve a0
@@ -210,7 +253,7 @@ pub unsafe extern "C" fn _Level4InterruptVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".Level5InterruptVector.text"]
-pub unsafe extern "C" fn _Level5InterruptVector() {
+unsafe extern "C" fn _Level5InterruptVector() {
     asm!(
         "
     wsr a0, EXCSAVE5 // preserve a0
@@ -222,7 +265,7 @@ pub unsafe extern "C" fn _Level5InterruptVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".DebugExceptionVector.text"]
-pub unsafe extern "C" fn _Level6InterruptVector() {
+unsafe extern "C" fn _Level6InterruptVector() {
     asm!(
         "
     wsr a0, EXCSAVE6 // preserve a0
@@ -234,7 +277,7 @@ pub unsafe extern "C" fn _Level6InterruptVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".NMIExceptionVector.text"]
-pub unsafe extern "C" fn _Level7InterruptVector() {
+unsafe extern "C" fn _Level7InterruptVector() {
     asm!(
         "
     wsr a0, EXCSAVE7 // preserve a0
@@ -246,7 +289,7 @@ pub unsafe extern "C" fn _Level7InterruptVector() {
 #[naked]
 #[no_mangle]
 #[link_section = ".WindowOverflow4.text"]
-pub unsafe extern "C" fn _WindowOverflow4() {
+unsafe extern "C" fn _WindowOverflow4() {
     asm!(
         "
         s32e    a0, a5, -16
@@ -261,7 +304,7 @@ pub unsafe extern "C" fn _WindowOverflow4() {
 #[naked]
 #[no_mangle]
 #[link_section = ".WindowUnderflow4.text"]
-pub unsafe extern "C" fn _WindowUnderflow4() {
+unsafe extern "C" fn _WindowUnderflow4() {
     asm!(
         "
         l32e    a1, a5, -12
@@ -299,7 +342,7 @@ pub unsafe extern "C" fn _WindowUnderflow4() {
 #[naked]
 #[no_mangle]
 #[link_section = ".WindowOverflow8.text"]
-pub unsafe extern "C" fn _WindowOverflow8() {
+unsafe extern "C" fn _WindowOverflow8() {
     asm!(
         "
         s32e    a0, a9, -16
@@ -320,7 +363,7 @@ pub unsafe extern "C" fn _WindowOverflow8() {
 #[naked]
 #[no_mangle]
 #[link_section = ".WindowUnderflow8.text"]
-pub unsafe extern "C" fn _WindowUnderflow8() {
+unsafe extern "C" fn _WindowUnderflow8() {
     asm!(
         "
         l32e    a0, a9, -16
@@ -341,7 +384,7 @@ pub unsafe extern "C" fn _WindowUnderflow8() {
 #[naked]
 #[no_mangle]
 #[link_section = ".WindowOverflow12.text"]
-pub unsafe extern "C" fn _WindowOverflow12() {
+unsafe extern "C" fn _WindowOverflow12() {
     asm!(
         "
         s32e    a0,  a13, -16
@@ -366,7 +409,7 @@ pub unsafe extern "C" fn _WindowOverflow12() {
 #[naked]
 #[no_mangle]
 #[link_section = ".WindowUnderflow12.text"]
-pub unsafe extern "C" fn _WindowUnderflow12() {
+unsafe extern "C" fn _WindowUnderflow12() {
     asm!(
         "
         l32e    a0,  a13, -16
