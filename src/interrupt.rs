@@ -32,7 +32,7 @@ pub unsafe fn set_mask(mut mask: u32) -> u32 {
     mask
 }
 
-/// Disables specific  interrupts and returns the previous settings
+/// Disables specific interrupts and returns the previous settings
 #[inline]
 pub fn disable_mask(mask: u32) -> u32 {
     let mut prev: u32 = 0;
@@ -74,6 +74,33 @@ pub fn get_mask() -> u32 {
     let mask: u32;
     unsafe { asm!("rsr.intenable $0" : "=r"(mask) ) };
     mask
+}
+
+/// Get currently active interrupts
+#[inline]
+pub fn get() -> u32 {
+    let mask: u32;
+    unsafe {
+        asm!("rsr.interrupt $0":"=r"(mask):::"volatile");
+    }
+    mask
+}
+
+/// Set interrupt
+///
+/// Only valid for software interrupts
+#[inline]
+pub unsafe fn set(mask: u32) {
+    asm!("wsr.interrupt $0"::"r"(mask)::"volatile");
+}
+
+/// Clear interrupt
+///
+/// Only valid for software and edge-triggered interrupts
+#[inline]
+pub unsafe fn clear(mask: u32) {
+    // TODO: not yet implemented in llvm wsr.intclear a2
+    asm!(".byte 0x20, 0xe3, 0x13"::"{a2}"(mask)::"volatile");
 }
 
 /// Execute closure `f` in an interrupt-free context.
