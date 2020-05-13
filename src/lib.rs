@@ -23,7 +23,7 @@ mod macros;
 #[no_mangle]
 pub unsafe extern "C" fn DefaultPreInit() {}
 
-pub mod exceptions;
+pub mod exception;
 
 #[doc(hidden)]
 #[no_mangle]

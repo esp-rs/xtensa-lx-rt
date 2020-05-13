@@ -6,10 +6,32 @@ INCLUDE memory.x
 
 /* after memory.x to allow override */
 PROVIDE(__pre_init = DefaultPreInit); 
-PROVIDE(__other_exception = __default_other_exception); 
+
+/* high level exception/interrupt routines, which can be ovverride with Rust functions */
+PROVIDE(__exception = __default_exception); 
+PROVIDE(__double_exception = __default_double_exception); 
+PROVIDE(__level_1_interrupt = __default_interrupt); 
+PROVIDE(__level_2_interrupt = __default_interrupt); 
+PROVIDE(__level_3_interrupt = __default_interrupt); 
+PROVIDE(__level_4_interrupt = __default_interrupt); 
+PROVIDE(__level_5_interrupt = __default_interrupt); 
+PROVIDE(__level_6_interrupt = __default_interrupt); 
+PROVIDE(__level_7_interrupt = __default_interrupt); 
+
+/* low level exception/interrupt, which must be overidden using naked funcions */
+PROVIDE(__naked_user_exception = __default_naked_exception); 
+PROVIDE(__naked_kernel_exception = __default_naked_exception); 
+PROVIDE(__naked_double_exception = __default_naked_double_exception); 
+PROVIDE(__naked_level_2_interrupt = __default_naked_level_2_interrupt); 
+PROVIDE(__naked_level_3_interrupt = __default_naked_level_3_interrupt); 
+PROVIDE(__naked_level_4_interrupt = __default_naked_level_4_interrupt); 
+PROVIDE(__naked_level_5_interrupt = __default_naked_level_5_interrupt); 
+PROVIDE(__naked_level_6_interrupt = __default_naked_level_6_interrupt); 
+PROVIDE(__naked_level_7_interrupt = __default_naked_level_7_interrupt); 
+
 
 /* needed to force inclusion of the vectors */
-EXTERN(_UserExceptionVector);
+EXTERN(__default_naked_exception);
 
 /* Define output sections */
 SECTIONS {
