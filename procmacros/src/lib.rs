@@ -220,6 +220,11 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /// Marks a function as the interrupt handler, with optional interrupt level indicated
+///
+/// When the function is also marked `#[naked]`, it is a low-level interrupt handler:
+/// no entry and exit code to store processor state will be generated.
+/// The user needs to ensure that all registers which are used are saved and restored and that
+/// the proper return instruction is used.
 #[proc_macro_attribute]
 pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut f: ItemFn = syn::parse(input).expect("`#[interrupt]` must be applied to a function");
