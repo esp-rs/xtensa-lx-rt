@@ -154,17 +154,17 @@ unsafe extern "C" fn save_context() {
         s32i    a3, sp, +XT_STK_M3
 
         // Double Precision Accelerator Option
-        .byte 0xa0, 0x3e, 0xe3              // rur     a3, f64r_lo TODO: 20200510 not yet supported by llvm
+        rur     a3, f64r_lo 
         s32i    a3, sp, +XT_STK_F64R_LO
-        .byte 0xb0, 0x3e, 0xe3              // rur     a3, f64r_hi TODO: 20200510 not yet supported by llvm
+        rur     a3, f64r_hi
         s32i    a3, sp, +XT_STK_F64R_HI
-        .byte 0xc0, 0x3e, 0xe3              // rur     a3, f64s    TODO: 20200510 not yet supported by llvm
+        rur     a3, f64s   
         s32i    a3, sp, +XT_STK_F64S
 
         // Coprocessor Option
-        .byte 0x80, 0x3e, 0xe3              // rur     a3, fcr     TODO: 20200510 not yet supported by llvm
+        rur     a3, fcr
         s32i    a3, sp, +XT_STK_FCR
-        .byte 0x90, 0x3e, 0xe3              // rur     a3, fsr     TODO: 20200510 not yet supported by llvm
+        rur     a3, fsr
         s32i    a3, sp, +XT_STK_FSR
         ssi     f0, sp, +XT_STK_F0
         ssi     f1, sp, +XT_STK_F1
@@ -318,17 +318,17 @@ unsafe extern "C" fn restore_context() {
 
         // Double Precision Accelerator Option
         l32i    a3, sp, +XT_STK_F64R_LO
-        .byte 0x30, 0xea, 0xf3               // wur     a3, f64r_lo TODO: 20200510 not yet supported by llvm
+        wur     a3, f64r_lo
         l32i    a3, sp, +XT_STK_F64R_HI
-        .byte 0x30, 0xeb, 0xf3               // wur     a3, f64r_hi TODO: 20200510 not yet supported by llvm
+        wur     a3, f64r_hi
         l32i    a3, sp, +XT_STK_F64S
-        .byte 0x30, 0xec, 0xf3               // wur     a3, f64s TODO: 20200510 not yet supported by llvm
+        wur     a3, f64s
 
         // Coprocessor Option
         l32i    a3, sp, +XT_STK_FCR
-        .byte 0x30, 0xe8, 0xf3               // wur     a3, fcr TODO: 20200510 not yet supported by llvm
+        wur     a3, fcr
         l32i    a3, sp, +XT_STK_FSR
-        .byte 0x30, 0xe9, 0xf3               // wur     a3, fsr TODO: 20200510 not yet supported by llvm
+        wur     a3, fsr
         lsi     f0, sp, +XT_STK_F0
         lsi     f1, sp, +XT_STK_F1
         lsi     f2, sp, +XT_STK_F2

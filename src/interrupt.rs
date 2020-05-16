@@ -99,8 +99,7 @@ pub unsafe fn set(mask: u32) {
 /// Only valid for software and edge-triggered interrupts
 #[inline]
 pub unsafe fn clear(mask: u32) {
-    // TODO: not yet implemented in llvm wsr.intclear a2
-    asm!(".byte 0x20, 0xe3, 0x13"::"{a2}"(mask)::"volatile");
+    asm!("wsr.intclear $0"::"r"(mask)::"volatile");
 }
 
 /// Execute closure `f` in an interrupt-free context.
