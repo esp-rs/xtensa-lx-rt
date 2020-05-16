@@ -4,19 +4,19 @@
 #![feature(naked_functions)]
 #![feature(core_intrinsics)]
 
-extern crate bare_metal;
-
-use r0;
-pub mod interrupt;
-
-extern crate xtensa_lx6_rt_proc_macros as proc_macros;
-
 pub use proc_macros::entry;
 pub use proc_macros::exception;
 pub use proc_macros::interrupt;
 pub use proc_macros::pre_init;
+
+use r0;
 pub use r0::init_data;
 pub use r0::zero_bss;
+
+use xtensa_lx6_rt_proc_macros as proc_macros;
+
+pub mod exception;
+pub mod interrupt;
 
 #[macro_use]
 mod macros;
@@ -24,8 +24,6 @@ mod macros;
 #[doc(hidden)]
 #[no_mangle]
 pub unsafe extern "C" fn DefaultPreInit() {}
-
-pub mod exception;
 
 #[doc(hidden)]
 #[no_mangle]
