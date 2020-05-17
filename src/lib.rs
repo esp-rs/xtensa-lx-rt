@@ -126,13 +126,10 @@ pub fn delay(clocks: u32) {
 
 /// Get the id of the current core
 #[inline]
-pub fn get_core_id() -> u32 {
+pub fn get_processor_id() -> u32 {
     let mut x: u32;
     unsafe { asm!("rsr.prid $0" : "=r"(x) ::: "volatile") };
-    // 0xCDCD for the PRO core (core 0)
-    // 0xABAB for the APP core (core 1)
-    // esp-idf uses bit 13 to distinguish
-    (x >> 13) & 1
+    x
 }
 
 const XDM_OCD_DCR_SET: u32 = 0x10200C;
