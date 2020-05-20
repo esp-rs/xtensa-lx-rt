@@ -52,7 +52,6 @@ pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
             .into();
     }
 
-    // XXX should we blacklist other attributes?
     let (statics, stmts) = match extract_static_muts(f.block.stmts) {
         Err(e) => return e.to_compile_error().into(),
         Ok(x) => x,
@@ -135,13 +134,10 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
         return error;
     }
 
-    let fspan = f.span();
-    //let ident = f.sig.ident.clone();
-
     let valid_signature = f.sig.constness.is_none()
         && f.vis == Visibility::Inherited
         && f.sig.abi.is_none()
-        && f.sig.inputs.len() == 1
+        && f.sig.inputs.len() <= 2
         && f.sig.generics.params.is_empty()
         && f.sig.generics.where_clause.is_none()
         && f.sig.variadic.is_none()
@@ -156,12 +152,22 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
 
     if !valid_signature {
         return parse::Error::new(
-            fspan,
-            "`#[exception]` handlers must have signature `[unsafe] fn(ExceptionCause) [-> !]`",
+            f.span(),
+            "`#[exception]` handlers must have signature `[unsafe] fn([ExceptionCause[, Context]) [-> !]`",
         )
         .to_compile_error()
         .into();
     }
+
+    let inputs = f.sig.inputs.clone();
+
+    let args = inputs.iter().map(|arg| match arg {
+        syn::FnArg::Typed(x) => {
+            let pat = &*x.pat;
+            quote!(#pat)
+        }
+        _ => quote!(#arg),
+    });
 
     let (statics, stmts) = match extract_static_muts(f.block.stmts) {
         Err(e) => return e.to_compile_error().into(),
@@ -206,9 +212,12 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
         #(#attrs)*
         #[doc(hidden)]
         #[export_name = "__exception"]
-        pub unsafe extern "C" fn #tramp_ident(cause: crate::exception::ExceptionCause) {
+        pub unsafe extern "C" fn #tramp_ident(
+            cause: xtensa_lx6_rt::exception::ExceptionCause,
+            frame: xtensa_lx6_rt::exception::Context
+        ) {
             #ident(
-                cause,
+                #(#args),*
                 #(#resource_args),*
             )
         }
@@ -266,10 +275,6 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
-    let fspan = f.span();
-
-    // XXX should we blacklist other attributes?
-
     if let Err(error) = check_attr_whitelist(&f.attrs, WhiteListCaller::Interrupt) {
         return error;
     }
@@ -284,14 +289,14 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
 
     if naked && (level < 2 || level > 7) {
         return parse::Error::new(
-            fspan,
+            f.span(),
             "`#[naked]` `#[interrupt]` handlers must have interrupt level >=2 and <=7",
         )
         .to_compile_error()
         .into();
     } else if !naked && (level < 1 || level > 7) {
         return parse::Error::new(
-            fspan,
+            f.span(),
             "`#[interrupt]` handlers must have interrupt level >=1 and <=7",
         )
         .to_compile_error()
@@ -301,7 +306,7 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
     let valid_signature = f.sig.constness.is_none()
         && f.vis == Visibility::Inherited
         && f.sig.abi.is_none()
-        && ((!naked && f.sig.inputs.len() == 1) || (naked && f.sig.inputs.len() == 0))
+        && ((!naked && f.sig.inputs.len() <= 2) || (naked && f.sig.inputs.len() == 0))
         && f.sig.generics.params.is_empty()
         && f.sig.generics.where_clause.is_none()
         && f.sig.variadic.is_none()
@@ -317,15 +322,15 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
     if !valid_signature {
         if naked {
             return parse::Error::new(
-                fspan,
+                f.span(),
                 "`#[naked]` `#[interrupt]` handlers must have signature `[unsafe] fn() [-> !]`",
             )
             .to_compile_error()
             .into();
         } else {
             return parse::Error::new(
-                fspan,
-                "`#[interrupt]` handlers must have signature `[unsafe] fn(u32) [-> !]`",
+                f.span(),
+                "`#[interrupt]` handlers must have signature `[unsafe] fn([u32[, Context]]) [-> !]`",
             )
             .to_compile_error()
             .into();
@@ -336,6 +341,16 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
         Err(e) => return e.to_compile_error().into(),
         Ok(x) => x,
     };
+
+    let inputs = f.sig.inputs.clone();
+
+    let args = inputs.iter().map(|arg| match arg {
+        syn::FnArg::Typed(x) => {
+            let pat = &*x.pat;
+            quote!(#pat)
+        }
+        _ => quote!(#arg),
+    });
 
     f.sig.ident = Ident::new(&format!("__xtensa_lx_6_{}", f.sig.ident), Span::call_site());
     f.sig.inputs.extend(statics.iter().map(|statik| {
@@ -392,8 +407,11 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
             #(#attrs)*
             #[doc(hidden)]
             #[export_name = #ident_s]
-            pub unsafe extern "C" fn #tramp_ident(level: u32) {
-                #ident(level,
+            pub unsafe extern "C" fn #tramp_ident(
+                level: u32,
+                frame: xtensa_lx6_rt::exception::Context
+            ) {
+                    #ident(#(#args),*
                     #(#resource_args),*
                 )
             }
@@ -447,7 +465,6 @@ pub fn pre_init(args: TokenStream, input: TokenStream) -> TokenStream {
         return error;
     }
 
-    // XXX should we blacklist other attributes?
     let attrs = f.attrs;
     let ident = f.sig.ident;
     let block = f.block;
