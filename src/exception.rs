@@ -116,6 +116,73 @@ pub enum ExceptionCause {
     None = 255,
 }
 
+/// State of the CPU saved when entering exception or interrupt
+///
+/// Must be aligned with assembly frame format in assembly.rs
+#[repr(C)]
+#[allow(non_snake_case)]
+#[derive(Debug)]
+pub struct SaveFrame {
+    PC: u32,
+    PS: u32,
+
+    A0: u32,
+    A1: u32,
+    A2: u32,
+    A3: u32,
+    A4: u32,
+    A5: u32,
+    A6: u32,
+    A7: u32,
+    A8: u32,
+    A9: u32,
+    A10: u32,
+    A11: u32,
+    A12: u32,
+    A13: u32,
+    A14: u32,
+    A15: u32,
+    SAR: u32,
+    EXCCAUSE: u32,
+    EXCVADDR: u32,
+    LBEG: u32,
+    LEND: u32,
+    LCOUNT: u32,
+    THREADPTR: u32,
+    SCOMPARE1: u32,
+    BR: u32,
+    ACCLO: u32,
+    ACCHI: u32,
+    M0: u32,
+    M1: u32,
+    M2: u32,
+    M3: u32,
+    F64R_LO: u32,
+    F64R_HI: u32,
+    F64S: u32,
+    FCR: u32,
+    FSR: u32,
+    F0: u32,
+    F1: u32,
+    F2: u32,
+    F3: u32,
+    F4: u32,
+    F5: u32,
+    F6: u32,
+    F7: u32,
+    F8: u32,
+    F9: u32,
+    F10: u32,
+    F11: u32,
+    F12: u32,
+    F13: u32,
+    F14: u32,
+    F15: u32,
+
+    reserved: [u32; 7],
+    BASESAVE: [u32; 4],
+}
+
 extern "Rust" {
     /// This symbol will be provided by the user via `#[exception]`
     fn __exception(cause: ExceptionCause);
@@ -140,20 +207,20 @@ extern "Rust" {
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_exception(cause: ExceptionCause) {
-    panic!("Exception: {:?}", cause)
+extern "C" fn __default_exception(cause: ExceptionCause, save_frame: &SaveFrame) {
+    panic!("Exception: {:?}\n{:08X?}", cause, save_frame)
 }
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_interrupt(level: u32) {
-    panic!("Interrupt: {:?}", level)
+extern "C" fn __default_interrupt(level: u32, save_frame: &SaveFrame) {
+    panic!("Interrupt: {:?}\n{:08X?}", level, save_frame)
 }
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_double_exception(cause: ExceptionCause) {
-    panic!("Double Exception: {:?}", cause)
+extern "C" fn __default_double_exception(cause: ExceptionCause, save_frame: &SaveFrame) {
+    panic!("Double Exception: {:?}\n{:08X?}", cause, save_frame)
 }
 
 // Raw vector handlers
