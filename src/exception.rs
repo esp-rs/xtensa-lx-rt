@@ -122,7 +122,7 @@ pub enum ExceptionCause {
 #[repr(C)]
 #[allow(non_snake_case)]
 #[derive(Debug)]
-pub struct SaveFrame {
+pub struct Context {
     PC: u32,
     PS: u32,
 
@@ -207,20 +207,20 @@ extern "Rust" {
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_exception(cause: ExceptionCause, save_frame: &SaveFrame) {
-    panic!("Exception: {:?}\n{:08X?}", cause, save_frame)
+extern "C" fn __default_exception(cause: ExceptionCause, save_frame: &Context) {
+    panic!("Exception: {:?}, {:08x?}", cause, save_frame)
 }
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_interrupt(level: u32, save_frame: &SaveFrame) {
-    panic!("Interrupt: {:?}\n{:08X?}", level, save_frame)
+extern "C" fn __default_interrupt(level: u32, save_frame: &Context) {
+    panic!("Interrupt: {:?}, {:08x?}", level, save_frame)
 }
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_double_exception(cause: ExceptionCause, save_frame: &SaveFrame) {
-    panic!("Double Exception: {:?}\n{:08X?}", cause, save_frame)
+extern "C" fn __default_double_exception(cause: ExceptionCause, save_frame: &Context) {
+    panic!("Double Exception: {:?}, {:08x?}", cause, save_frame)
 }
 
 // Raw vector handlers
