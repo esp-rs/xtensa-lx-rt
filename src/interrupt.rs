@@ -102,6 +102,14 @@ pub unsafe fn clear(mask: u32) {
     asm!("wsr.intclear $0"::"r"(mask)::"volatile");
 }
 
+/// Get current interrupt level
+#[inline]
+pub fn get_level() -> u32 {
+    let ps: u32;
+    unsafe { asm!("rsr.ps $0":"=r"(ps):::"volatile") };
+    ps & 0xf
+}
+
 /// Execute closure `f` in an interrupt-free context.
 ///
 /// This as also known as a "critical section".
