@@ -25,7 +25,7 @@ pub unsafe fn enable() -> u32 {
 /// - Do not call this function inside an `interrupt::free` critical section
 #[inline]
 pub unsafe fn set_mask(mut mask: u32) -> u32 {
-    asm!("
+    llvm_asm!("
         xsr $0, intenable
         rsync
         " :"=r"(mask) :"0"(mask):: "volatile");
@@ -38,7 +38,7 @@ pub fn disable_mask(mask: u32) -> u32 {
     let mut prev: u32 = 0;
     let _dummy: u32;
     unsafe {
-        asm!("
+        llvm_asm!("
         xsr.intenable $0  // get mask and temporarily disable interrupts 
         and $1,$1,$0
         rsync
@@ -58,7 +58,7 @@ pub fn disable_mask(mask: u32) -> u32 {
 pub unsafe fn enable_mask(mask: u32) -> u32 {
     let mut prev: u32 = 0;
     let _dummy: u32;
-    asm!("
+    llvm_asm!("
         xsr.intenable $0 // get mask and temporarily disable interrupts
         or $1,$1,$0
         rsync
@@ -72,7 +72,7 @@ pub unsafe fn enable_mask(mask: u32) -> u32 {
 #[inline]
 pub fn get_mask() -> u32 {
     let mask: u32;
-    unsafe { asm!("rsr.intenable $0" : "=r"(mask) ) };
+    unsafe { llvm_asm!("rsr.intenable $0" : "=r"(mask) ) };
     mask
 }
 
@@ -81,7 +81,7 @@ pub fn get_mask() -> u32 {
 pub fn get() -> u32 {
     let mask: u32;
     unsafe {
-        asm!("rsr.interrupt $0":"=r"(mask):::"volatile");
+        llvm_asm!("rsr.interrupt $0":"=r"(mask):::"volatile");
     }
     mask
 }
@@ -91,7 +91,7 @@ pub fn get() -> u32 {
 /// Only valid for software interrupts
 #[inline]
 pub unsafe fn set(mask: u32) {
-    asm!("wsr.interrupt $0"::"r"(mask)::"volatile");
+    llvm_asm!("wsr.interrupt $0"::"r"(mask)::"volatile");
 }
 
 /// Clear interrupt
@@ -99,14 +99,14 @@ pub unsafe fn set(mask: u32) {
 /// Only valid for software and edge-triggered interrupts
 #[inline]
 pub unsafe fn clear(mask: u32) {
-    asm!("wsr.intclear $0"::"r"(mask)::"volatile");
+    llvm_asm!("wsr.intclear $0"::"r"(mask)::"volatile");
 }
 
 /// Get current interrupt level
 #[inline]
 pub fn get_level() -> u32 {
     let ps: u32;
-    unsafe { asm!("rsr.ps $0":"=r"(ps):::"volatile") };
+    unsafe { llvm_asm!("rsr.ps $0":"=r"(ps):::"volatile") };
     ps & 0xf
 }
 

@@ -236,7 +236,7 @@ extern "C" fn __default_double_exception(cause: ExceptionCause, save_frame: &Con
 #[no_mangle]
 #[link_section = ".KernelExceptionVector.text"]
 unsafe extern "C" fn _KernelExceptionVector() {
-    asm!(
+    llvm_asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
         rsr a0, EXCCAUSE // get exception cause
@@ -252,7 +252,7 @@ unsafe extern "C" fn _KernelExceptionVector() {
 #[no_mangle]
 #[link_section = ".UserExceptionVector.text"]
 unsafe extern "C" fn _UserExceptionVector() {
-    asm!(
+    llvm_asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
         rsr a0, EXCCAUSE // get exception cause
@@ -271,7 +271,7 @@ unsafe extern "C" fn _UserExceptionVector() {
 #[no_mangle]
 #[link_section = ".DoubleExceptionVector.text"]
 unsafe extern "C" fn _DoubleExceptionVector() {
-    asm!(
+    llvm_asm!(
         "
     wsr a0, EXCSAVE1                   // preserve a0 (EXCSAVE1 can be reused as long as there
                                        // is no double exception in the first exception until 
@@ -285,7 +285,7 @@ unsafe extern "C" fn _DoubleExceptionVector() {
 #[no_mangle]
 #[link_section = ".Level2InterruptVector.text"]
 unsafe extern "C" fn _Level2InterruptVector() {
-    asm!(
+    llvm_asm!(
         "
     wsr a0, EXCSAVE2 // preserve a0
     call0 __naked_level_2_interrupt     // used as long jump
@@ -297,7 +297,7 @@ unsafe extern "C" fn _Level2InterruptVector() {
 #[no_mangle]
 #[link_section = ".Level3InterruptVector.text"]
 unsafe extern "C" fn _Level3InterruptVector() {
-    asm!(
+    llvm_asm!(
         "
     wsr a0, EXCSAVE3 // preserve a0
     call0 __naked_level_3_interrupt     // used as long jump
@@ -309,7 +309,7 @@ unsafe extern "C" fn _Level3InterruptVector() {
 #[no_mangle]
 #[link_section = ".Level4InterruptVector.text"]
 unsafe extern "C" fn _Level4InterruptVector() {
-    asm!(
+    llvm_asm!(
         "
     wsr a0, EXCSAVE4 // preserve a0
     call0 __naked_level_4_interrupt     // used as long jump
@@ -321,7 +321,7 @@ unsafe extern "C" fn _Level4InterruptVector() {
 #[no_mangle]
 #[link_section = ".Level5InterruptVector.text"]
 unsafe extern "C" fn _Level5InterruptVector() {
-    asm!(
+    llvm_asm!(
         "
     wsr a0, EXCSAVE5 // preserve a0
     call0 __naked_level_5_interrupt     // used as long jump
@@ -333,7 +333,7 @@ unsafe extern "C" fn _Level5InterruptVector() {
 #[no_mangle]
 #[link_section = ".DebugExceptionVector.text"]
 unsafe extern "C" fn _Level6InterruptVector() {
-    asm!(
+    llvm_asm!(
         "
     wsr a0, EXCSAVE6 // preserve a0
     call0 __naked_level_6_interrupt     // used as long jump
@@ -345,7 +345,7 @@ unsafe extern "C" fn _Level6InterruptVector() {
 #[no_mangle]
 #[link_section = ".NMIExceptionVector.text"]
 unsafe extern "C" fn _Level7InterruptVector() {
-    asm!(
+    llvm_asm!(
         "
     wsr a0, EXCSAVE7 // preserve a0
     call0 __naked_level_7_interrupt     // used as long jump
@@ -357,7 +357,7 @@ unsafe extern "C" fn _Level7InterruptVector() {
 #[no_mangle]
 #[link_section = ".WindowOverflow4.text"]
 unsafe extern "C" fn _WindowOverflow4() {
-    asm!(
+    llvm_asm!(
         "
         s32e    a0, a5, -16
         s32e    a1, a5, -12
@@ -372,7 +372,7 @@ unsafe extern "C" fn _WindowOverflow4() {
 #[no_mangle]
 #[link_section = ".WindowUnderflow4.text"]
 unsafe extern "C" fn _WindowUnderflow4() {
-    asm!(
+    llvm_asm!(
         "
         l32e    a1, a5, -12
         l32e    a0, a5, -16
@@ -410,7 +410,7 @@ unsafe extern "C" fn _WindowUnderflow4() {
 #[no_mangle]
 #[link_section = ".WindowOverflow8.text"]
 unsafe extern "C" fn _WindowOverflow8() {
-    asm!(
+    llvm_asm!(
         "
         s32e    a0, a9, -16
         l32e    a0, a1, -12
@@ -431,7 +431,7 @@ unsafe extern "C" fn _WindowOverflow8() {
 #[no_mangle]
 #[link_section = ".WindowUnderflow8.text"]
 unsafe extern "C" fn _WindowUnderflow8() {
-    asm!(
+    llvm_asm!(
         "
         l32e    a0, a9, -16
         l32e    a1, a9, -12
@@ -452,7 +452,7 @@ unsafe extern "C" fn _WindowUnderflow8() {
 #[no_mangle]
 #[link_section = ".WindowOverflow12.text"]
 unsafe extern "C" fn _WindowOverflow12() {
-    asm!(
+    llvm_asm!(
         "
         s32e    a0,  a13, -16
         l32e    a0,  a1,  -12
@@ -477,7 +477,7 @@ unsafe extern "C" fn _WindowOverflow12() {
 #[no_mangle]
 #[link_section = ".WindowUnderflow12.text"]
 unsafe extern "C" fn _WindowUnderflow12() {
-    asm!(
+    llvm_asm!(
         "
         l32e    a0,  a13, -16
         l32e    a1,  a13, -12
