@@ -3,7 +3,6 @@
 //! Do not use this crate directly.
 
 #![deny(warnings)]
-#![allow(unused_braces)] // neded for rustdoc
 
 extern crate proc_macro;
 

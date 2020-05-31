@@ -1,6 +1,6 @@
 [package]
 name = "xtensa-lx6-rt"
-version = "0.2.0"
+version = "0.1.0"
 description = "Low level access for xtensa lx6 processors"
 categories = ["embedded", "hardware-support", "no-std"]
 keywords = ["xtensa", "lx6", "register", "peripheral"]
@@ -17,4 +17,4 @@ links = "xtensa-lx6-rt" # prevent multiple versions of this crate to be linked t
 [dependencies]
 r0 = "1.0.0"
 bare-metal = { version = "0.2.0", features = ["const-fn"] }
-xtensa-lx6-rt-proc-macros = { path = "procmacros" }
+xtensa-lx6-rt-proc-macros = { path = "procmacros", version = "=0.1.0" }

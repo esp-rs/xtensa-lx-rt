@@ -1,6 +1,6 @@
   
 [package]
-authors = ["Jorge Aparicio <jorge@japaric.io>","Arjan Mels <arjan@mels.email>"]
+authors = ["Jorge Aparicio <jorge@japaric.io>","Arjan Mels <arjan@mels.email>", "Scott Mabin <scott@mabez.dev>"]
 categories = ["embedded", "no-std"]
 description = "Attributes re-exported in `xtensa-lx6-rt`"
 documentation = "https://docs.rs/xtensa-lx6-rt"
