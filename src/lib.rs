@@ -2,7 +2,6 @@
 #![feature(llvm_asm)]
 #![feature(global_asm)]
 #![feature(naked_functions)]
-#![feature(core_intrinsics)]
 
 pub use proc_macros::entry;
 pub use proc_macros::exception;
@@ -47,7 +46,7 @@ pub unsafe extern "C" fn Reset() -> ! {
 
     // Copy of data segment is done by bootloader
 
-    set_mask(!0); // disable all interrupts
+    set_mask(0); // disable all interrupts
     let vecbase = &_init_start as *const u32;
     set_vecbase(vecbase); // move vec table
 
