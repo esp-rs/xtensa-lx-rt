@@ -46,26 +46,31 @@ pub unsafe extern "C" fn Reset() -> ! {
 
     // Copy of data segment is done by bootloader
 
-    set_mask(0); // disable all interrupts
-    let vecbase = &_init_start as *const u32;
-    set_vecbase(vecbase); // move vec table
+    // According to 4.4.6.2 of the xtensa isa, ccount and compare are undefined on reset,
+    // set all values to zero to disable
+    reset_internal_timers();
+    
+    // move vec table
+    set_vecbase(&_init_start as *const u32); 
 
     main();
 }
 
-
-/* 
+/*
     We redefine these functions to avoid pulling in xtensa-lx6 as a dependency
 */
 
 #[doc(hidden)]
 #[inline]
-unsafe fn set_mask(mut mask: u32) -> u32 {
+unsafe fn reset_internal_timers() {
+    // TODO feature gate for silicon specific configurations
     llvm_asm!("
-        xsr $0, intenable
-        rsync
-        " :"=r"(mask) :"0"(mask):: "volatile");
-    mask
+        movi a2,0
+        wsr.ccompare0 a2
+        wsr.ccompare1 a2
+        wsr.ccompare2 a2
+        isync
+    " ::::: "volatile");
 }
 
 #[doc(hidden)]
