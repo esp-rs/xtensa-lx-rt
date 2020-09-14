@@ -31,6 +31,7 @@ mod assembly;
 ///
 #[allow(unused)]
 #[derive(Debug)]
+#[repr(C)]
 pub enum ExceptionCause {
     /// Illegal Instruction
     Illegal = 0,
