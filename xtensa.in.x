@@ -127,6 +127,12 @@ SECTIONS {
     *(.noinit .noinit.*)
   } > RWDATA
 
+  .rwtext :
+  {
+    . = ALIGN (4);
+    *(.rwtext.literal .rwtext .rwtext.literal.* .rwtext.*)
+  } > RWTEXT
+
  /* must be last segment using RWTEXT */
   .text_heap_start (NOLOAD) :
   {
