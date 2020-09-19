@@ -63,11 +63,16 @@ pub unsafe extern "C" fn Reset() -> ! {
 #[doc(hidden)]
 #[inline]
 unsafe fn reset_internal_timers() {
-    // TODO feature gate for silicon specific configurations
+    #[cfg(feature = "lx6")]
     llvm_asm!("
         wsr.ccompare0 $0
         wsr.ccompare1 $0
         wsr.ccompare2 $0
+        isync
+    " ::"r"(0)::: "volatile");
+    #[cfg(feature = "lx106")]
+    llvm_asm!("
+        wsr.ccompare0 $0
         isync
     " ::"r"(0)::: "volatile");
 }

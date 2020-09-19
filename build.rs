@@ -11,6 +11,18 @@ fn main() {
         .unwrap()
         .write_all(include_bytes!("xtensa.in.x"))
         .unwrap();
+
+    let exception_source = match (cfg!(feature = "lx6"), cfg!(feature = "lx106")) {
+        (true, false) => &include_bytes!("exception-lx6.x")[..],
+        (false, true) => &include_bytes!("exception-lx106.x")[..],
+        _ => panic!("Either the lx6 or lx106 feature has to be enabled")
+    };
+
+    File::create(out.join("exception.x"))
+        .unwrap()
+        .write_all(exception_source)
+        .unwrap();
+
     println!("cargo:rustc-link-search={}", out.display());
 
     // Only re-run the build script when memory.x is changed,
