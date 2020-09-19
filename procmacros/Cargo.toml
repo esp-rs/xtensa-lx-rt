@@ -2,12 +2,12 @@
 [package]
 authors = ["Jorge Aparicio <jorge@japaric.io>","Arjan Mels <arjan@mels.email>", "Scott Mabin <scott@mabez.dev>"]
 categories = ["embedded", "no-std"]
-description = "Attributes re-exported in `xtensa-lx6-rt`"
-documentation = "https://docs.rs/xtensa-lx6-rt"
-keywords = ["esp32", "xtensa-lx6-rt", "runtime", "startup"]
+description = "Attributes re-exported in `xtensa-lx-rt`"
+documentation = "https://docs.rs/xtensa-lx-rt"
+keywords = ["esp32", "xtensa-lx-rt", "runtime", "startup"]
 license = "MIT OR Apache-2.0"
-name = "xtensa-lx6-rt-proc-macros"
-repository = "https://github.com/esp-rs/xtensa-lx6-rt"
+name = "xtensa-lx-rt-proc-macros"
+repository = "https://github.com/esp-rs/xtensa-lx-rt"
 version = "0.1.0"
 edition = "2018"
 

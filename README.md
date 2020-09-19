@@ -1,6 +1,12 @@
-# `xtensa-lx6-rt`
+# `xtensa-lx-rt`
 
-Low level access to xtensa lx6 processors. These processors are used in the ESP32 SoC's.
+Low level access to xtensa lx processors. This crate currently supports the following CPU's:
+
+| feature        | Description                                    |
+|----------------|------------------------------------------------|
+|   `lx6`        | The processors are used in the ESP32 SoC's.    |
+|   `lx106`      | The processors are used in the ESP8266 SoC's.  |
+
 
 ## License
 

@@ -1,4 +1,4 @@
-//! Internal implementation details of `xtensa-lx6-rt`.
+//! Internal implementation details of `xtensa-lx-rt`.
 //!
 //! Do not use this crate directly.
 
@@ -57,7 +57,7 @@ pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     f.sig.ident = Ident::new(
-        &format!("__xtensa_lx6_rt_{}", f.sig.ident),
+        &format!("__xtensa_lx_rt_{}", f.sig.ident),
         Span::call_site(),
     );
     f.sig.inputs.extend(statics.iter().map(|statik| {
@@ -212,8 +212,8 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
         #[doc(hidden)]
         #[export_name = "__exception"]
         pub unsafe extern "C" fn #tramp_ident(
-            cause: xtensa_lx6_rt::exception::ExceptionCause,
-            frame: xtensa_lx6_rt::exception::Context
+            cause: xtensa_lx_rt::exception::ExceptionCause,
+            frame: xtensa_lx_rt::exception::Context
         ) {
             #ident(
                 #(#args),*
@@ -408,7 +408,7 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
             #[export_name = #ident_s]
             pub unsafe extern "C" fn #tramp_ident(
                 level: u32,
-                frame: xtensa_lx6_rt::exception::Context
+                frame: xtensa_lx_rt::exception::Context
             ) {
                     #ident(#(#args),*
                     #(#resource_args),*
@@ -559,20 +559,20 @@ fn check_attr_whitelist(attrs: &[Attribute], caller: WhiteListCaller) -> Result<
 
         let err_str = match caller {
             WhiteListCaller::Entry => {
-                "this attribute is not allowed on a xtensa-lx6-rt entry point"
+                "this attribute is not allowed on a xtensa-lx-rt entry point"
             }
             WhiteListCaller::Exception => {
-                "this attribute is not allowed on an exception handler controlled by xtensa-lx6-rt"
+                "this attribute is not allowed on an exception handler controlled by xtensa-lx-rt"
             }
             WhiteListCaller::Interrupt => {
                 if eq(&attr, "naked") {
                     continue 'o;
                 }
 
-                "this attribute is not allowed on an interrupt handler controlled by xtensa-lx6-rt"
+                "this attribute is not allowed on an interrupt handler controlled by xtensa-lx-rt"
             }
             WhiteListCaller::PreInit => {
-                "this attribute is not allowed on a pre-init controlled by xtensa-lx6-rt"
+                "this attribute is not allowed on a pre-init controlled by xtensa-lx-rt"
             }
         };
 
