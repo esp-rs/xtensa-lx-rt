@@ -12,7 +12,7 @@ use r0;
 pub use r0::init_data;
 pub use r0::zero_bss;
 
-use xtensa_lx6_rt_proc_macros as proc_macros;
+use xtensa_lx_rt_proc_macros as proc_macros;
 
 pub mod exception;
 
@@ -57,7 +57,7 @@ pub unsafe extern "C" fn Reset() -> ! {
 }
 
 /*
-    We redefine these functions to avoid pulling in xtensa-lx6 as a dependency
+    We redefine these functions to avoid pulling in xtensa-lx as a dependency
 */
 
 #[doc(hidden)]
