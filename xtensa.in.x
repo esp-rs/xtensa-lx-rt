@@ -20,14 +20,6 @@ SECTIONS {
     _etext = .;
   } > ROTEXT
 
-  .rodata :
-  {
-    _rodata_start = ABSOLUTE(.);
-    . = ALIGN (4);
-    *(.rodata .rodata.*)
-    _rodata_end = ABSOLUTE(.);
-  } > RODATA
-
   .data :
   {
     _data_start = ABSOLUTE(.);
@@ -49,6 +41,14 @@ SECTIONS {
     . = ALIGN(4);
     *(.noinit .noinit.*)
   } > RWDATA
+
+  .rodata :
+  {
+    _rodata_start = ABSOLUTE(.);
+    . = ALIGN (4);
+    *(.rodata .rodata.*)
+    _rodata_end = ABSOLUTE(.);
+  } > RODATA
 
   .rwtext :
   {
