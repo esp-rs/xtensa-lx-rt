@@ -55,15 +55,15 @@ pub enum ExceptionCause {
     /// Integer Divide By Zero
     DivideByZero = 6,
     /// Use Of Failed Speculative Access (Not Implemented)
-    Speculation = 7,
+    NextPCValueIllegal = 7,
     /// Privileged Instruction
     Privileged = 8,
     /// Unaligned Load Or Store
     Unaligned = 9,
     /// Reserved
-    Reserved10 = 10,
+    ExternalRegisterPrivilegeError = 10,
     /// Reserved
-    Reserved11 = 11,
+    ExclusiveError = 11,
     /// Pif Data Error On Instruction Fetch (Rb-200x And Later)
     InstrDataError = 12,
     /// Pif Data Error On Load Or Store (Rb-200x And Later)

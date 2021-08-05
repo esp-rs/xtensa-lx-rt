@@ -91,7 +91,7 @@ global_asm!(
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn save_context() {
-    llvm_asm!(
+    asm!(
         "
         s32i    a2,  sp, +XT_STK_A2
         s32i    a3,  sp, +XT_STK_A3
@@ -188,7 +188,8 @@ unsafe extern "C" fn save_context() {
         mov     a0, a9                   // retrieve return address
 
         ret
-    "
+    ",
+        options(noreturn)
     )
 }
 
@@ -278,7 +279,7 @@ global_asm!(
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn restore_context() {
-    llvm_asm!(
+    asm!(
         "
         l32i    a3,  sp, +XT_STK_SAR
         wsr     a3,  SAR
@@ -364,7 +365,8 @@ unsafe extern "C" fn restore_context() {
         l32i    a15, sp, +XT_STK_A15
 
         ret
-    "
+    ",
+        options(noreturn)
     )
 }
 
@@ -399,7 +401,7 @@ global_asm!(
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_exception() {
-    llvm_asm!(
+    asm!(
         "
         SAVE_CONTEXT 1
 
@@ -421,7 +423,8 @@ unsafe extern "C" fn __default_naked_exception() {
         
         .byte 0x00, 0x30, 0x00            // rfe   // PS.EXCM is cleared 
                                           // TODO: 20200509, not supported in llvm yet
-        "
+        ",
+        options(noreturn)
     )
 }
 
@@ -433,19 +436,20 @@ unsafe extern "C" fn __default_naked_exception() {
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_double_exception() {
-    llvm_asm!(
+    asm!(
         "
         SAVE_CONTEXT double
 
         l32i    a6, sp, +XT_STK_EXCCAUSE  // put cause in a6 = a2 in callee
         mov     a7, sp                    // put address of save frame in a7=a3 in callee
-        call4   __double_exception        // call handler <= actual call!
+        call4   __exception               // call handler <= actual call!
 
         RESTORE_CONTEXT double
 
         .byte 0x00, 0x32, 0x00            // rfde   
                                           // TODO: 20200509, not supported in llvm yet
-        "
+        ",
+        options(noreturn)
     )
 }
 
@@ -475,7 +479,7 @@ global_asm!(
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_level_2_interrupt() {
-    llvm_asm!("HANDLE_INTERRUPT_LEVEL 2");
+    asm!("HANDLE_INTERRUPT_LEVEL 2", options(noreturn));
 }
 
 /// Handle Level 3 Interrupt by storing full context and then calling regular function
@@ -486,7 +490,7 @@ unsafe extern "C" fn __default_naked_level_2_interrupt() {
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_level_3_interrupt() {
-    llvm_asm!("HANDLE_INTERRUPT_LEVEL 3");
+    asm!("HANDLE_INTERRUPT_LEVEL 3", options(noreturn));
 }
 
 /// Handle Level 4 Interrupt by storing full context and then calling regular function
@@ -497,7 +501,7 @@ unsafe extern "C" fn __default_naked_level_3_interrupt() {
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_level_4_interrupt() {
-    llvm_asm!("HANDLE_INTERRUPT_LEVEL 4");
+    asm!("HANDLE_INTERRUPT_LEVEL 4", options(noreturn));
 }
 
 /// Handle Level 5 Interrupt by storing full context and then calling regular function
@@ -508,7 +512,7 @@ unsafe extern "C" fn __default_naked_level_4_interrupt() {
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_level_5_interrupt() {
-    llvm_asm!("HANDLE_INTERRUPT_LEVEL 5");
+    asm!("HANDLE_INTERRUPT_LEVEL 5", options(noreturn));
 }
 
 /// Handle Level 6 (=Debug) Interrupt by storing full context and then calling regular function
@@ -519,7 +523,7 @@ unsafe extern "C" fn __default_naked_level_5_interrupt() {
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_level_6_interrupt() {
-    llvm_asm!("HANDLE_INTERRUPT_LEVEL 6");
+    asm!("HANDLE_INTERRUPT_LEVEL 6", options(noreturn));
 }
 
 /// Handle Level 7 (=NMI) Interrupt by storing full context and then calling regular function
@@ -530,5 +534,5 @@ unsafe extern "C" fn __default_naked_level_6_interrupt() {
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_level_7_interrupt() {
-    llvm_asm!("HANDLE_INTERRUPT_LEVEL 7");
+    asm!("HANDLE_INTERRUPT_LEVEL 7", options(noreturn));
 }
