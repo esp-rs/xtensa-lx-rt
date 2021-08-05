@@ -41,7 +41,6 @@ extern "Rust" {
     fn __level_1_interrupt(level: u32);
 }
 
-
 #[no_mangle]
 #[link_section = ".rwtext"]
 extern "C" fn __default_exception(cause: ExceptionCause, save_frame: &Context) {
@@ -55,14 +54,13 @@ extern "C" fn __default_double_exception(cause: ExceptionCause, save_frame: &Con
 }
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_interrupt(_level: u32, _save_frame: &Context) {
-}
+extern "C" fn __default_interrupt(_level: u32, _save_frame: &Context) {}
 
 #[naked]
 #[no_mangle]
 #[link_section = ".DebugException.text"]
 unsafe extern "C" fn _DebugExceptionVector() {
-    llvm_asm!(
+    asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
         call0 __naked_debug_exception     // used as long jump
@@ -74,7 +72,7 @@ unsafe extern "C" fn _DebugExceptionVector() {
 #[no_mangle]
 #[link_section = ".NMIException.text"]
 unsafe extern "C" fn _NMIExceptionVector() {
-    llvm_asm!(
+    asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
         call0 __naked_nmi_exception     // used as long jump
@@ -86,7 +84,7 @@ unsafe extern "C" fn _NMIExceptionVector() {
 #[no_mangle]
 #[link_section = ".KernelException.text"]
 unsafe extern "C" fn _KernelExceptionVector() {
-    llvm_asm!(
+    asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
 
@@ -99,7 +97,7 @@ unsafe extern "C" fn _KernelExceptionVector() {
 #[no_mangle]
 #[link_section = ".UserException.text"]
 unsafe extern "C" fn _UserExceptionVector() {
-    llvm_asm!(
+    asm!(
         "
         wsr a0, EXCSAVE1 // preserve a0
 
@@ -112,7 +110,7 @@ unsafe extern "C" fn _UserExceptionVector() {
 #[no_mangle]
 #[link_section = ".DoubleException.text"]
 unsafe extern "C" fn _DoubleExceptionVector() {
-    llvm_asm!(
+    asm!(
         "
         wsr a0, EXCSAVE1                   // preserve a0 (EXCSAVE1 can be reused as long as there
                                            // is no double exception in the first exception until

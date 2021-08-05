@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(llvm_asm)]
+#![feature(asm)]
 #![feature(global_asm)]
 #![feature(naked_functions)]
 
@@ -49,9 +49,9 @@ pub unsafe extern "C" fn Reset() -> ! {
     // According to 4.4.6.2 of the xtensa isa, ccount and compare are undefined on reset,
     // set all values to zero to disable
     reset_internal_timers();
-    
+
     // move vec table
-    set_vecbase(&_init_start as *const u32); 
+    set_vecbase(&_init_start as *const u32);
 
     main();
 }
@@ -64,21 +64,21 @@ pub unsafe extern "C" fn Reset() -> ! {
 #[inline]
 unsafe fn reset_internal_timers() {
     #[cfg(feature = "lx6")]
-    llvm_asm!("
-        wsr.ccompare0 $0
-        wsr.ccompare1 $0
-        wsr.ccompare2 $0
+    asm!("
+        wsr.ccompare0 {0}
+        wsr.ccompare1 {0}
+        wsr.ccompare2 {0}
         isync
-    " ::"r"(0)::: "volatile");
+    ", out(reg) _, options(nostack));
     #[cfg(feature = "lx106")]
-    llvm_asm!("
-        wsr.ccompare0 $0
+    asm!("
+        wsr.ccompare0 {0}
         isync
-    " ::"r"(0)::: "volatile");
+    ", out(reg) _, options(no_stack));
 }
 
 #[doc(hidden)]
 #[inline]
 unsafe fn set_vecbase(base: *const u32) {
-    llvm_asm!("wsr.vecbase $0" ::"r"(base) :: "volatile");
+    asm!("wsr.vecbase {0}", in(reg) base, options(nostack));
 }
