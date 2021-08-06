@@ -6,6 +6,8 @@ INCLUDE memory.x
 
 /* after memory.x to allow override */
 PROVIDE(__pre_init = DefaultPreInit);
+PROVIDE(__zero_bss = default_mem_hook);
+PROVIDE(__init_data = default_mem_hook);
 
 INCLUDE exception.x
 
@@ -36,6 +38,9 @@ SECTIONS {
     *(.data .data.*)
     _data_end = ABSOLUTE(.);
   } > RWDATA AT > RODATA
+
+  /* LMA of .data */
+  _sidata = LOADADDR(.data);
 
   .bss (NOLOAD) : ALIGN(4)
   {

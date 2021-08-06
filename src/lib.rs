@@ -28,7 +28,12 @@ pub unsafe extern "C" fn Reset() -> ! {
         static mut _bss_start: u32;
         static mut _bss_end: u32;
 
+        static mut _data_start: u32;
+        static mut _data_end: u32;
+        static _sidata: u32;
+
         static mut _init_start: u32;
+        
     }
 
     extern "Rust" {
@@ -37,12 +42,21 @@ pub unsafe extern "C" fn Reset() -> ! {
 
         // This symbol will be provided by the user via `#[pre_init]`
         fn __pre_init();
+
+        fn __zero_bss() -> bool;
+
+        fn __init_data() -> bool;
     }
 
     __pre_init();
 
-    // Initialize RAM
-    r0::zero_bss(&mut _bss_start, &mut _bss_end);
+    if __zero_bss() {
+        r0::zero_bss(&mut _bss_start, &mut _bss_end);
+    }
+
+    if __init_data() {
+        r0::init_data(&mut _data_start, &mut _data_end, &_sidata);
+    }
 
     // Copy of data segment is done by bootloader
 
@@ -81,4 +95,11 @@ unsafe fn reset_internal_timers() {
 #[inline]
 unsafe fn set_vecbase(base: *const u32) {
     asm!("wsr.vecbase {0}", in(reg) base, options(nostack));
+}
+
+#[doc(hidden)]
+#[no_mangle]
+#[rustfmt::skip]
+pub extern "Rust" fn default_mem_hook() -> bool {
+    true // default to zeroing bss & initializing data
 }
