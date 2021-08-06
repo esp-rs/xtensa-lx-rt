@@ -33,7 +33,7 @@ pub unsafe extern "C" fn Reset() -> ! {
         static _sidata: u32;
 
         static mut _init_start: u32;
-        
+
     }
 
     extern "Rust" {
