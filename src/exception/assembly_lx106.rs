@@ -76,7 +76,7 @@ unsafe extern "C" fn save_context() {
         s32i    a3,  sp, +XT_STK_SAR
 
         ret
-    "
+    ", options(noreturn)
     )
 }
 
@@ -153,7 +153,7 @@ unsafe extern "C" fn restore_context() {
         l32i    a15, sp, +XT_STK_A15
 
         ret
-    "
+    ", options(noreturn)
     )
 }
 
@@ -210,7 +210,7 @@ unsafe extern "C" fn __default_naked_exception() {
 
         .byte 0x00, 0x30, 0x00            // rfe
                                           // TODO: 20200509, not supported in llvm yet
-        "
+        ", options(noreturn)
     )
 }
 
@@ -233,7 +233,7 @@ unsafe extern "C" fn __default_naked_double_exception() {
         RESTORE_CONTEXT double
 
         .byte 0x00, 0x30, 0x00            // rfe
-        "
+        ", options(noreturn)
     )
 }
 
@@ -258,7 +258,7 @@ unsafe extern "C" fn __default_naked_kernel_exception() {
 
         .byte 0x00, 0x30, 0x00            // rfe   // PS.EXCM is cleared
                                           // TODO: 20200509, not supported in llvm yet
-        "
+        ", options(noreturn)
     )
 }
 
@@ -282,7 +282,7 @@ unsafe extern "C" fn __default_naked_nmi_exception() {
         RESTORE_CONTEXT 1
 
         .byte 0x00, 0x30, 0x00            // rfe
-        "
+        ", options(noreturn)
     )
 }
 
@@ -306,7 +306,7 @@ unsafe extern "C" fn __default_naked_debug_exception() {
         RESTORE_CONTEXT 1
 
         .byte 0x00, 0x30, 0x00            // rfe
-        "
+        ", options(noreturn)
     )
 }
 
@@ -330,6 +330,6 @@ unsafe extern "C" fn __default_naked_alloc_exception() {
         RESTORE_CONTEXT 1
 
         .byte 0x00, 0x30, 0x00            // rfe
-        "
+        ", options(noreturn)
     )
 }

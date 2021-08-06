@@ -88,7 +88,7 @@ unsafe fn reset_internal_timers() {
     asm!("
         wsr.ccompare0 {0}
         isync
-    ", out(reg) _, options(no_stack));
+    ", out(reg) _, options(nostack));
 }
 
 #[doc(hidden)]
