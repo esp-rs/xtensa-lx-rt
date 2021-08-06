@@ -10,9 +10,10 @@ PROVIDE(__pre_init = DefaultPreInit);
 INCLUDE exception.x
 
 SECTIONS {
-  .text :
+  .text : ALIGN(4)
   {
     _stext = .;
+    . = ALIGN (4);
     _text_start = ABSOLUTE(.);
     . = ALIGN (4);
     *(.literal .text .literal.* .text.*)
@@ -20,7 +21,7 @@ SECTIONS {
     _etext = .;
   } > ROTEXT
 
-  .rodata :
+  .rodata : ALIGN(4)
   {
     _rodata_start = ABSOLUTE(.);
     . = ALIGN (4);
@@ -28,7 +29,7 @@ SECTIONS {
     _rodata_end = ABSOLUTE(.);
   } > RODATA
 
-  .data :
+  .data : ALIGN(4)
   {
     _data_start = ABSOLUTE(.);
     . = ALIGN (4);
@@ -36,7 +37,7 @@ SECTIONS {
     _data_end = ABSOLUTE(.);
   } > RWDATA AT > RODATA
 
-  .bss (NOLOAD) :
+  .bss (NOLOAD) : ALIGN(4)
   {
     _bss_start = ABSOLUTE(.);
     . = ALIGN (4);
@@ -44,27 +45,27 @@ SECTIONS {
     _bss_end = ABSOLUTE(.);
   } > RWDATA
 
-  .noinit (NOLOAD) :
+  .noinit (NOLOAD) : ALIGN(4)
   {
     . = ALIGN(4);
     *(.noinit .noinit.*)
   } > RWDATA
 
-  .rwtext :
+  .rwtext : ALIGN(4)
   {
     . = ALIGN (4);
     *(.rwtext.literal .rwtext .rwtext.literal.* .rwtext.*)
   } > RWTEXT
 
  /* must be last segment using RWTEXT */
-  .text_heap_start (NOLOAD) :
+  .text_heap_start (NOLOAD) : ALIGN(4)
   {
     . = ALIGN (4);
     _text_heap_start = ABSOLUTE(.);
   } > RWTEXT
 
  /* must be last segment using RWDATA */
-  .heap_start (NOLOAD) :
+  .heap_start (NOLOAD) : ALIGN(4)
   {
     . = ALIGN (4);
     _heap_start = ABSOLUTE(.);
