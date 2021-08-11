@@ -16,7 +16,7 @@ edition = "2018"
 
 [dependencies]
 r0 = "1.0.0"
-bare-metal = { version = "0.2.0", features = ["const-fn"] }
+bare-metal = "1.0.0"
 xtensa-lx-rt-proc-macros = { path = "procmacros", version = "=0.1.0" }
 
 [features]
