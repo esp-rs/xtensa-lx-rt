@@ -15,7 +15,7 @@ fn main() {
     let exception_source = match (cfg!(feature = "lx6"), cfg!(feature = "lx106")) {
         (true, false) => &include_bytes!("exception-lx6.x")[..],
         (false, true) => &include_bytes!("exception-lx106.x")[..],
-        _ => panic!("Either the lx6 or lx106 feature has to be enabled")
+        _ => panic!("Either the lx6 or lx106 feature has to be enabled"),
     };
 
     File::create(out.join("exception.x"))

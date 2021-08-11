@@ -22,14 +22,14 @@
 //! can always be expanded to `mov a0,label; call a0`. Care must be taken since A0 is overwritten.
 //!
 
-#[cfg(feature = "lx6")]
-mod lx6;
+#[cfg(feature = "lx106")]
+mod assembly_lx106;
 #[cfg(feature = "lx6")]
 mod assembly_lx6;
 #[cfg(feature = "lx106")]
 mod lx106;
-#[cfg(feature = "lx106")]
-mod assembly_lx106;
+#[cfg(feature = "lx6")]
+mod lx6;
 
 /// EXCCAUSE register values
 ///
@@ -124,7 +124,7 @@ pub enum ExceptionCause {
     None = 255,
 }
 
-#[cfg(feature = "lx6")]
-pub use lx6::Context;
 #[cfg(feature = "lx106")]
 pub use lx106::Context;
+#[cfg(feature = "lx6")]
+pub use lx6::Context;

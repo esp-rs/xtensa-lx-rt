@@ -64,7 +64,8 @@ unsafe extern "C" fn _DebugExceptionVector() {
         "
         wsr a0, EXCSAVE1 // preserve a0
         call0 __naked_debug_exception     // used as long jump
-        ", options(noreturn)
+        ",
+        options(noreturn)
     );
 }
 
@@ -76,7 +77,8 @@ unsafe extern "C" fn _NMIExceptionVector() {
         "
         wsr a0, EXCSAVE1 // preserve a0
         call0 __naked_nmi_exception     // used as long jump
-        ", options(noreturn)
+        ",
+        options(noreturn)
     );
 }
 
@@ -89,7 +91,8 @@ unsafe extern "C" fn _KernelExceptionVector() {
         wsr a0, EXCSAVE1 // preserve a0
 
         call0  __naked_kernel_exception
-        ", options(noreturn)
+        ",
+        options(noreturn)
     );
 }
 
@@ -102,7 +105,8 @@ unsafe extern "C" fn _UserExceptionVector() {
         wsr a0, EXCSAVE1 // preserve a0
 
         call0 __naked_user_exception
-        ", options(noreturn)
+        ",
+        options(noreturn)
     );
 }
 
@@ -116,6 +120,7 @@ unsafe extern "C" fn _DoubleExceptionVector() {
                                            // is no double exception in the first exception until
                                            // EXCSAVE1 is stored to the stack.)
         call0 __naked_double_exception     // used as long jump
-    ", options(noreturn)
+    ",
+        options(noreturn)
     );
 }
