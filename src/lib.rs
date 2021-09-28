@@ -2,7 +2,6 @@
 #![feature(asm)]
 #![feature(global_asm)]
 #![feature(naked_functions)]
-#![feature(stmt_expr_attributes)]
 
 pub use proc_macros::entry;
 pub use proc_macros::exception;
