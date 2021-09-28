@@ -2,6 +2,7 @@
 #![feature(asm)]
 #![feature(global_asm)]
 #![feature(naked_functions)]
+#![feature(stmt_expr_attributes)]
 
 pub use proc_macros::entry;
 pub use proc_macros::exception;
@@ -58,8 +59,6 @@ pub unsafe extern "C" fn Reset() -> ! {
         r0::init_data(&mut _data_start, &mut _data_end, &_sidata);
     }
 
-    // Copy of data segment is done by bootloader
-
     // According to 4.4.6.2 of the xtensa isa, ccount and compare are undefined on reset,
     // set all values to zero to disable
     reset_internal_timers();
@@ -102,4 +101,43 @@ unsafe fn set_vecbase(base: *const u32) {
 #[rustfmt::skip]
 pub extern "Rust" fn default_mem_hook() -> bool {
     true // default to zeroing bss & initializing data
+}
+
+
+#[macro_export]
+macro_rules! cfg_asm {
+    (@inner, [$($x:tt)*], [$($opts:tt)*], ) => {
+        asm!($($x)* $($opts)*)
+    };
+    (@inner, [$($x:tt)*], [$($opts:tt)*], #[cfg($meta:meta)] $asm:literal, $($rest:tt)*) => {
+        #[cfg($meta)]
+        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*);
+        #[cfg(not($meta))]
+        cfg_asm!(@inner, [$($x)*], [$($opts)*], $($rest)*)
+    };
+    (@inner, [$($x:tt)*], [$($opts:tt)*], $asm:literal, $($rest:tt)*) => {
+        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*)
+    };
+    ({$($asms:tt)*}, $($opts:tt)*) => {
+        cfg_asm!(@inner, [], [$($opts)*], $($asms)*)
+    };
+}
+
+#[macro_export]
+macro_rules! cfg_global_asm {
+    (@inner, [$($x:tt)*], [$($opts:tt)*], ) => {
+        global_asm!($($x)* $($opts)*)
+    };
+    (@inner, [$($x:tt)*], [$($opts:tt)*], #[cfg($meta:meta)] $asm:literal, $($rest:tt)*) => {
+        #[cfg($meta)]
+        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*);
+        #[cfg(not($meta))]
+        cfg_asm!(@inner, [$($x)*], [$($opts)*], $($rest)*)
+    };
+    (@inner, [$($x:tt)*], [$($opts:tt)*], $asm:literal, $($rest:tt)*) => {
+        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*)
+    };
+    ({$($asms:tt)*}, $($opts:tt)*) => {
+        cfg_asm!(@inner, [], [$($opts)*], $($asms)*)
+    };
 }
