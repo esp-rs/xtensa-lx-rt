@@ -29,38 +29,78 @@ pub struct Context {
     SAR: u32,
     EXCCAUSE: u32,
     EXCVADDR: u32,
+
+    #[cfg(target_feature = "loop")]
     LBEG: u32,
+    #[cfg(target_feature = "loop")]
     LEND: u32,
+    #[cfg(target_feature = "loop")]
     LCOUNT: u32,
+
+    #[cfg(target_feature = "threadptr")]
     THREADPTR: u32,
+
+    #[cfg(target_feature = "s32c1i")]
     SCOMPARE1: u32,
+
+    #[cfg(target_feature = "bool")]
     BR: u32,
+
+    #[cfg(target_feature = "mac16")]
     ACCLO: u32,
+    #[cfg(target_feature = "mac16")]
     ACCHI: u32,
+    #[cfg(target_feature = "mac16")]
     M0: u32,
+    #[cfg(target_feature = "mac16")]
     M1: u32,
+    #[cfg(target_feature = "mac16")]
     M2: u32,
+    #[cfg(target_feature = "mac16")]
     M3: u32,
+
+    #[cfg(target_feature = "dfpaccel")]
     F64R_LO: u32,
+    #[cfg(target_feature = "dfpaccel")]
     F64R_HI: u32,
+    #[cfg(target_feature = "dfpaccel")]
     F64S: u32,
+
+    #[cfg(target_feature = "coprocessor")]
     FCR: u32,
+    #[cfg(target_feature = "coprocessor")]
     FSR: u32,
+    #[cfg(target_feature = "coprocessor")]
     F0: u32,
+    #[cfg(target_feature = "coprocessor")]
     F1: u32,
+    #[cfg(target_feature = "coprocessor")]
     F2: u32,
+    #[cfg(target_feature = "coprocessor")]
     F3: u32,
+    #[cfg(target_feature = "coprocessor")]
     F4: u32,
+    #[cfg(target_feature = "coprocessor")]
     F5: u32,
+    #[cfg(target_feature = "coprocessor")]
     F6: u32,
+    #[cfg(target_feature = "coprocessor")]
     F7: u32,
+    #[cfg(target_feature = "coprocessor")]
     F8: u32,
+    #[cfg(target_feature = "coprocessor")]
     F9: u32,
+    #[cfg(target_feature = "coprocessor")]
     F10: u32,
+    #[cfg(target_feature = "coprocessor")]
     F11: u32,
+    #[cfg(target_feature = "coprocessor")]
     F12: u32,
+    #[cfg(target_feature = "coprocessor")]
     F13: u32,
+    #[cfg(target_feature = "coprocessor")]
     F14: u32,
+    #[cfg(target_feature = "coprocessor")]
     F15: u32,
 
     reserved: [u32; 7],

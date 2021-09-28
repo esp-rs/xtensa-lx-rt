@@ -25,11 +25,11 @@
 #[cfg(feature = "lx106")]
 mod assembly_lx106;
 #[cfg(feature = "lx6")]
-mod assembly_lx6;
+mod assembly;
 #[cfg(feature = "lx106")]
 mod lx106;
 #[cfg(feature = "lx6")]
-mod lx6;
+mod lxx;
 
 /// EXCCAUSE register values
 ///
@@ -127,4 +127,4 @@ pub enum ExceptionCause {
 #[cfg(feature = "lx106")]
 pub use lx106::Context;
 #[cfg(feature = "lx6")]
-pub use lx6::Context;
+pub use lxx::Context;

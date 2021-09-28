@@ -1,9 +1,10 @@
 use crate::cfg_asm;
 
-// TODO cfg symbols away and reduce BSA(base save area) depending on features enabled?
-// i.e the BSA is a fixed size based on all the features right now
+// TODO cfg symbols away and reduce frame size depending on features enabled?
+// i.e the frame size is a fixed size based on all the features right now
 // we know at compile time if a target has loops for example, if it doesn't
-// we can cut that memory usage from the BSA
+// we can cut that memory usage.
+// note that in esp-idf, it seems to be fixed at 256bytes for all chips?
 global_asm!(
     "
     .set XT_STK_PC,              0 
@@ -150,6 +151,9 @@ unsafe extern "C" fn save_context() {
         // Thread Pointer Option
         rur     a3, threadptr
         s32i    a3, sp, +XT_STK_THREADPTR
+        ",
+        #[cfg(target_feature = "s32c1i")]
+        "
         // Conditional Store Option
         rsr     a3, scompare1
         s32i    a3, sp, +XT_STK_SCOMPARE1
@@ -319,7 +323,7 @@ unsafe extern "C" fn restore_context() {
         l32i    a3, sp, +XT_STK_THREADPTR
         wur     a3, threadptr
         ",
-        #[cfg(target_feature = "threadptr")]
+        #[cfg(target_feature = "s32c1i")]
         "
         // Conditional Store Option
         l32i    a3, sp, +XT_STK_SCOMPARE1

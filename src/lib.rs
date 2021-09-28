@@ -122,22 +122,3 @@ macro_rules! cfg_asm {
         cfg_asm!(@inner, [], [$($opts)*], $($asms)*)
     };
 }
-
-#[macro_export]
-macro_rules! cfg_global_asm {
-    (@inner, [$($x:tt)*], [$($opts:tt)*], ) => {
-        global_asm!($($x)* $($opts)*)
-    };
-    (@inner, [$($x:tt)*], [$($opts:tt)*], #[cfg($meta:meta)] $asm:literal, $($rest:tt)*) => {
-        #[cfg($meta)]
-        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*);
-        #[cfg(not($meta))]
-        cfg_asm!(@inner, [$($x)*], [$($opts)*], $($rest)*)
-    };
-    (@inner, [$($x:tt)*], [$($opts:tt)*], $asm:literal, $($rest:tt)*) => {
-        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*)
-    };
-    ({$($asms:tt)*}, $($opts:tt)*) => {
-        cfg_asm!(@inner, [], [$($opts)*], $($asms)*)
-    };
-}
