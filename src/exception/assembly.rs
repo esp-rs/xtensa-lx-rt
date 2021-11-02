@@ -190,7 +190,7 @@ unsafe extern "C" fn save_context() {
         rur     a3, f64s   
         s32i    a3, sp, +XT_STK_F64S
         ",
-        #[cfg(target_feature = "coprocessor")]
+        #[cfg(target_feature = "fp")]
         "
         // Coprocessor Option
         rur     a3, fcr
@@ -361,7 +361,7 @@ unsafe extern "C" fn restore_context() {
         l32i    a3, sp, +XT_STK_F64S
         wur     a3, f64s
         ",
-        #[cfg(target_feature = "coprocessor")]
+        #[cfg(target_feature = "fp")]
         "
         // Coprocessor Option
         l32i    a3, sp, +XT_STK_FCR
