@@ -3,6 +3,9 @@
 #![feature(global_asm)]
 #![feature(naked_functions)]
 
+// required due to: https://github.com/rust-lang/rust/pull/87324
+#![allow(named_asm_labels)]
+
 pub use proc_macros::entry;
 pub use proc_macros::exception;
 pub use proc_macros::interrupt;
