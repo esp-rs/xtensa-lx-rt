@@ -1,6 +1,6 @@
 //! Exception handling
 //!
-//! Currently specialized for esp32 LX6 configuration: which extra registers to store,
+//! Currently specialized for ESP32 (LX6) configuration: which extra registers to store,
 //! how many interrupt levels etc.
 //!
 //! First level interrupts and exceptions save full processor state to the user stack.
@@ -22,14 +22,14 @@
 //! can always be expanded to `mov a0,label; call a0`. Care must be taken since A0 is overwritten.
 //!
 
-#[cfg(feature = "lx106")]
-mod assembly_lx106;
-#[cfg(feature = "lx6")]
-mod assembly_lx6;
-#[cfg(feature = "lx106")]
-mod lx106;
-#[cfg(feature = "lx6")]
-mod lx6;
+#[cfg(feature = "esp32")]
+mod assembly_esp32;
+#[cfg(feature = "esp8266")]
+mod assembly_esp8266;
+#[cfg(feature = "esp32")]
+mod esp32;
+#[cfg(feature = "esp8266")]
+mod esp8266;
 
 /// EXCCAUSE register values
 ///
@@ -124,7 +124,7 @@ pub enum ExceptionCause {
     None = 255,
 }
 
-#[cfg(feature = "lx106")]
-pub use lx106::Context;
-#[cfg(feature = "lx6")]
-pub use lx6::Context;
+#[cfg(feature = "esp32")]
+pub use esp32::Context;
+#[cfg(feature = "esp8266")]
+pub use esp8266::Context;

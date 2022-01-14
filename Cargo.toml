@@ -1,7 +1,7 @@
 [package]
 name = "xtensa-lx-rt"
 version = "0.7.0"
-description = "Low level access for xtensa lx processors"
+description = "Low level access for Xtensa LX processors"
 categories = ["embedded", "hardware-support", "no-std"]
 keywords = ["xtensa", "lx", "register", "peripheral"]
 license = "MIT OR Apache-2.0"
@@ -14,11 +14,14 @@ authors = [
 ]
 edition = "2018"
 
+[package.metadata.docs.rs]
+features = ["esp32"]
+
 [dependencies]
-r0 = "1.0.0"
 bare-metal = "1.0.0"
+r0 = "1.0.0"
 xtensa-lx-rt-proc-macros = { path = "procmacros", version = "=0.1.0" }
 
 [features]
-lx6 = []
-lx106 = []
+esp32   = []
+esp8266 = []

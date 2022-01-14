@@ -1,10 +1,13 @@
 #![no_std]
 #![feature(asm)]
+#![feature(asm_experimental_arch)]
 #![feature(global_asm)]
 #![feature(naked_functions)]
 
 // required due to: https://github.com/rust-lang/rust/pull/87324
 #![allow(named_asm_labels)]
+
+use core::arch::asm;
 
 pub use proc_macros::entry;
 pub use proc_macros::exception;
@@ -80,7 +83,7 @@ pub unsafe extern "C" fn Reset() -> ! {
 #[doc(hidden)]
 #[inline]
 unsafe fn reset_internal_timers() {
-    #[cfg(feature = "lx6")]
+    #[cfg(feature = "esp32")]
     asm!("
         wsr.ccompare0 {0}
         wsr.ccompare1 {0}

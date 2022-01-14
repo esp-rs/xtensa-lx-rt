@@ -1,3 +1,5 @@
+use core::arch::{asm, global_asm};
+
 global_asm!(
     "
     .set XT_STK_PC,              0

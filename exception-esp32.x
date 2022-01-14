@@ -1,4 +1,4 @@
-/* exception vector for the lx6, requiring high priority interrupts and register window support */
+/* exception vector for the ESP32, requiring high priority interrupts and register window support */
 
 /* high level exception/interrupt routines, which can be override with Rust functions */
 PROVIDE(__exception = __default_exception);
