@@ -13,8 +13,8 @@ fn main() {
         .unwrap();
 
     let exception_source = match (cfg!(feature = "esp32"), cfg!(feature = "esp8266")) {
-        (true, false) => &include_bytes!("exception-lx6.x")[..],
-        (false, true) => &include_bytes!("exception-lx106.x")[..],
+        (true, false) => &include_bytes!("exception-esp32.x")[..],
+        (false, true) => &include_bytes!("exception-esp8266.x")[..],
         _ => panic!("Either the esp32 or esp8266 feature must be enabled"),
     };
 

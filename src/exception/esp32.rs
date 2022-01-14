@@ -1,8 +1,10 @@
+use core::arch::asm;
+
 use super::ExceptionCause;
 
 /// State of the CPU saved when entering exception or interrupt
 ///
-/// Must be aligned with assembly frame format in assembly_lx6
+/// Must be aligned with assembly frame format in assembly_esp32
 #[repr(C)]
 #[allow(non_snake_case)]
 #[derive(Debug)]
