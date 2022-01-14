@@ -80,7 +80,7 @@ pub unsafe extern "C" fn Reset() -> ! {
 #[doc(hidden)]
 #[inline]
 unsafe fn reset_internal_timers() {
-    #[cfg(feature = "lx6")]
+    #[cfg(feature = "esp32")]
     asm!("
         wsr.ccompare0 {0}
         wsr.ccompare1 {0}
