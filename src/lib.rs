@@ -3,7 +3,6 @@
 #![feature(asm_experimental_arch)]
 #![feature(global_asm)]
 #![feature(naked_functions)]
-
 // required due to: https://github.com/rust-lang/rust/pull/87324
 #![allow(named_asm_labels)]
 
@@ -21,6 +20,7 @@ pub use r0::zero_bss;
 use xtensa_lx_rt_proc_macros as proc_macros;
 
 pub mod exception;
+pub mod interrupt;
 
 #[doc(hidden)]
 #[no_mangle]
@@ -108,4 +108,23 @@ unsafe fn set_vecbase(base: *const u32) {
 #[rustfmt::skip]
 pub extern "Rust" fn default_mem_hook() -> bool {
     true // default to zeroing bss & initializing data
+}
+
+#[macro_export]
+macro_rules! cfg_asm {
+    (@inner, [$($x:tt)*], [$($opts:tt)*], ) => {
+        asm!($($x)* $($opts)*)
+    };
+    (@inner, [$($x:tt)*], [$($opts:tt)*], #[cfg($meta:meta)] $asm:literal, $($rest:tt)*) => {
+        #[cfg($meta)]
+        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*);
+        #[cfg(not($meta))]
+        cfg_asm!(@inner, [$($x)*], [$($opts)*], $($rest)*)
+    };
+    (@inner, [$($x:tt)*], [$($opts:tt)*], $asm:literal, $($rest:tt)*) => {
+        cfg_asm!(@inner, [$($x)* $asm,], [$($opts)*], $($rest)*)
+    };
+    ({$($asms:tt)*}, $($opts:tt)*) => {
+        cfg_asm!(@inner, [], [$($opts)*], $($asms)*)
+    };
 }
