@@ -1,5 +1,12 @@
+use crate::cfg_asm;
 use core::arch::{asm, global_asm};
 
+// we could cfg symbols away and reduce frame size depending on features enabled
+// i.e the frame size is a fixed size based on all the features right now
+// we know at compile time if a target has loops for example, if it doesn't
+// we could cut that memory usage.
+// However in order to conveniently use `addmi` we need 256-byte alignment anyway
+// so wasting a bit more stack space seems to be the better option.
 global_asm!(
     "
     .set XT_STK_PC,              0 
@@ -93,7 +100,8 @@ global_asm!(
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn save_context() {
-    asm!(
+    cfg_asm!(
+    {
         "
         s32i    a2,  sp, +XT_STK_A2
         s32i    a3,  sp, +XT_STK_A3
@@ -112,7 +120,9 @@ unsafe extern "C" fn save_context() {
  
         rsr     a3,  SAR
         s32i    a3,  sp, +XT_STK_SAR
-
+        ",
+        #[cfg(XCHAL_HAVE_LOOPS)]
+        "
         // Loop Option
         rsr     a3,  LBEG
         s32i    a3,  sp, +XT_STK_LBEG
@@ -120,19 +130,27 @@ unsafe extern "C" fn save_context() {
         s32i    a3,  sp, +XT_STK_LEND
         rsr     a3,  LCOUNT
         s32i    a3,  sp, +XT_STK_LCOUNT
-
+        ",
+        #[cfg(XCHAL_HAVE_THREADPTR)]
+        "
         // Thread Pointer Option
         rur     a3, threadptr
         s32i    a3, sp, +XT_STK_THREADPTR
-
+        ",
+        #[cfg(XCHAL_HAVE_S32C1I)]
+        "
         // Conditional Store Option
         rsr     a3, scompare1
         s32i    a3, sp, +XT_STK_SCOMPARE1
-        
+        ",
+        #[cfg(XCHAL_HAVE_BOOLEANS)]
+        "
         // Boolean Option
         rsr     a3, br
         s32i    a3, sp, +XT_STK_BR
-
+        ",
+        #[cfg(XCHAL_HAVE_MAC16)]
+        "
         // MAC16 Option
         rsr     a3, acclo
         s32i    a3, sp, +XT_STK_ACCLO
@@ -146,7 +164,9 @@ unsafe extern "C" fn save_context() {
         s32i    a3, sp, +XT_STK_M2
         rsr     a3, m3
         s32i    a3, sp, +XT_STK_M3
-
+        ",
+        #[cfg(XCHAL_HAVE_DFP_ACCEL)]
+        "
         // Double Precision Accelerator Option
         rur     a3, f64r_lo 
         s32i    a3, sp, +XT_STK_F64R_LO
@@ -154,7 +174,9 @@ unsafe extern "C" fn save_context() {
         s32i    a3, sp, +XT_STK_F64R_HI
         rur     a3, f64s   
         s32i    a3, sp, +XT_STK_F64S
-
+        ",
+        #[cfg(XCHAL_HAVE_FP)]
+        "
         // Coprocessor Option
         rur     a3, fcr
         s32i    a3, sp, +XT_STK_FCR
@@ -176,23 +198,23 @@ unsafe extern "C" fn save_context() {
         ssi     f13, sp, +XT_STK_F13
         ssi     f14, sp, +XT_STK_F14
         ssi     f15, sp, +XT_STK_F15
-
+        ",
+        #[cfg(XCHAL_HAVE_WINDOWED)]
+        "
         // Spill all windows (up to 64) to the stack
         // Uses the overflow exception: doing a noop write to the high registers 
         // will trigger if needed. WOE needs to be enabled before this routine.
         
         mov     a9, a0                   // store return address
         addmi   sp,  sp, +XT_STK_FRMSZ   // go back to spill register region
-
         SPILL_REGISTERS
-
         addmi   sp,  sp, -XT_STK_FRMSZ   // return the current stack pointer
         mov     a0, a9                   // retrieve return address
-
         ret
-    ",
-        options(noreturn)
-    )
+        ",
+    },
+    options(noreturn)
+    );
 }
 
 global_asm!(
@@ -281,11 +303,14 @@ global_asm!(
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn restore_context() {
-    asm!(
+    cfg_asm!(
+    {
         "
         l32i    a3,  sp, +XT_STK_SAR
         wsr     a3,  SAR
-
+        ",
+        #[cfg(XCHAL_HAVE_LOOPS)]
+        "
         // Loop Option
         l32i    a3,  sp, +XT_STK_LBEG
         wsr     a3,  LBEG
@@ -293,19 +318,27 @@ unsafe extern "C" fn restore_context() {
         wsr     a3,  LEND
         l32i    a3,  sp, +XT_STK_LCOUNT
         wsr     a3,  LCOUNT
-
+        ",
+        #[cfg(XCHAL_HAVE_THREADPTR)]
+        "
         // Thread Pointer Option
         l32i    a3, sp, +XT_STK_THREADPTR
         wur     a3, threadptr
-
+        ",
+        #[cfg(XCHAL_HAVE_S32C1I)]
+        "
         // Conditional Store Option
         l32i    a3, sp, +XT_STK_SCOMPARE1
         wsr     a3, scompare1
-        
+        ",
+        #[cfg(XCHAL_HAVE_BOOLEANS)]
+        "
         // Boolean Option
         l32i    a3, sp, +XT_STK_BR
         wsr     a3, br
-
+        ",
+        #[cfg(XCHAL_HAVE_MAC16)]
+        "
         // MAC16 Option
         l32i    a3, sp, +XT_STK_ACCLO
         wsr     a3, acclo
@@ -319,7 +352,9 @@ unsafe extern "C" fn restore_context() {
         wsr     a3, m2
         l32i    a3, sp, +XT_STK_M3
         wsr     a3, m3
-
+        ",
+        #[cfg(XCHAL_HAVE_DFP_ACCEL)]
+        "
         // Double Precision Accelerator Option
         l32i    a3, sp, +XT_STK_F64R_LO
         wur     a3, f64r_lo
@@ -327,7 +362,9 @@ unsafe extern "C" fn restore_context() {
         wur     a3, f64r_hi
         l32i    a3, sp, +XT_STK_F64S
         wur     a3, f64s
-
+        ",
+        #[cfg(XCHAL_HAVE_FP)]
+        "
         // Coprocessor Option
         l32i    a3, sp, +XT_STK_FCR
         wur     a3, fcr
@@ -349,7 +386,8 @@ unsafe extern "C" fn restore_context() {
         lsi     f13, sp, +XT_STK_F13
         lsi     f14, sp, +XT_STK_F14
         lsi     f15, sp, +XT_STK_F15
-
+        ",
+        "
         // general registers
         l32i    a2,  sp, +XT_STK_A2
         l32i    a3,  sp, +XT_STK_A3
@@ -365,11 +403,9 @@ unsafe extern "C" fn restore_context() {
         l32i    a13, sp, +XT_STK_A13
         l32i    a14, sp, +XT_STK_A14
         l32i    a15, sp, +XT_STK_A15
-
         ret
-    ",
-        options(noreturn)
-    )
+        ",
+    }, options(noreturn));
 }
 
 global_asm!(
