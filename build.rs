@@ -22,12 +22,12 @@ fn main() {
     ) {
         (true, false) => handle_esp32(),
         (false, true) => handle_esp8266(),
-        _ => panic!("Either the esp32,esp32s2,esp32s3 or esp8266 feature must be enabled"),
+        _ => panic!("Either the esp32, esp32s2, esp32s3 or esp8266 feature must be enabled"),
     };
 
     println!("cargo:rustc-link-search={}", out.display());
 
-    // Only re-run the build script when memory.x is changed,
+    // Only re-run the build script when xtensa.in.x is changed,
     // instead of when any part of the source code changes.
     println!("cargo:rerun-if-changed=xtensa.in.x");
 }
@@ -53,7 +53,7 @@ fn handle_esp32() {
         (true, false, false) => Chip::Esp32,
         (false, true, false) => Chip::Esp32s2,
         (false, false, true) => Chip::Esp32s3,
-        _ => panic!("Either the esp32,esp32s2,esp32s3 or esp8266 feature must be enabled"),
+        _ => panic!("Either the esp32, esp32s2, esp32s3 or esp8266 feature must be enabled"),
     };
     let isa_config = get_config(chip).expect("Unable to parse ISA config");
 
