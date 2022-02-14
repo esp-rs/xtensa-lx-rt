@@ -1,0 +1,18 @@
+[package]
+name    = "core-isa-parser"
+version = "0.1.0"
+authors = [
+    "Jesse Braham <jesse@beta7.io>",
+    "Björn Quentin <bjoern.quentin@mobile-j.de>",
+]
+edition     = "2021"
+description = "Parse the core-isa.h headers from Espressif's xtensa-overlays repository"
+repository  = "https://github.com/esp-rs/xtensa-lx-rt"
+license     = "MIT OR Apache-2.0"
+
+[dependencies]
+anyhow        = "1.0"
+enum-as-inner = "0.3"
+regex         = "1.5"
+strum         = "0.23"
+strum_macros  = "0.23"

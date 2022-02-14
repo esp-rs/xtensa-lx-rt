@@ -1,0 +1,3 @@
+[submodule "core-isa-parser/xtensa-overlays"]
+	path = core-isa-parser/xtensa-overlays
+	url = https://github.com/espressif/xtensa-overlays.git

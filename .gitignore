@@ -1,4 +1,4 @@
-/target
-/procmacros/target
+**/target/
+
 **/*.rs.bk
 Cargo.lock
