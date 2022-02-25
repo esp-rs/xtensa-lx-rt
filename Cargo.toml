@@ -23,7 +23,7 @@ r0 = "1.0.0"
 xtensa-lx-rt-proc-macros = { path = "procmacros", version = "=0.1.0" }
 
 [build-dependencies]
-core-isa-parser = "0.1.0"
+core-isa-parser = { path = "core-isa-parser", version = "=0.1.0" }
 minijinja = "0.13.0"
 
 [features]
