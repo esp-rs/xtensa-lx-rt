@@ -7,6 +7,7 @@ use core::arch::{asm, global_asm};
 // we could cut that memory usage.
 // However in order to conveniently use `addmi` we need 256-byte alignment anyway
 // so wasting a bit more stack space seems to be the better option.
+// Additionally currently there is a huge chunk of memory reserved for spilling the registers.
 global_asm!(
     "
     .set XT_STK_PC,              0 
@@ -63,15 +64,15 @@ global_asm!(
     .set XT_STK_F13,           204
     .set XT_STK_F14,           208
     .set XT_STK_F15,           212
+    .set XT_STK_TMP,           216
 
-    .set XT_STK_BASESAVE,      240
-    .set XT_STK_FRMSZ,         256  // needs to be multiple of 16 and at least 16 free 
-                                    // (for base save region)
-                                    // multiple of 256 allows use of addmi instruction
+    .set XT_STK_FRMSZ,         512      // needs to be multiple of 16 and enough additional free space
+                                        // for the registers spilled to the stack
+                                        // multiple of 256 allows use of addmi instruction
 
 
 
-    .set PS_INTLEVEL_EXCM, 3	
+    .set PS_INTLEVEL_EXCM, 3	        // interrupts above this level shouldn't be used - can we raise this for bare-metal?
     .set PS_INTLEVEL_MASK, 0x0000000f
     .set PS_EXCM,          0x00000010
     .set PS_UM,            0x00000020
@@ -117,7 +118,7 @@ unsafe extern "C" fn save_context() {
         s32i    a13, sp, +XT_STK_A13
         s32i    a14, sp, +XT_STK_A14
         s32i    a15, sp, +XT_STK_A15
- 
+
         rsr     a3,  SAR
         s32i    a3,  sp, +XT_STK_SAR
         ",
@@ -201,15 +202,45 @@ unsafe extern "C" fn save_context() {
         ",
         #[cfg(XCHAL_HAVE_WINDOWED)]
         "
-        // Spill all windows (up to 64) to the stack
-        // Uses the overflow exception: doing a noop write to the high registers 
-        // will trigger if needed. WOE needs to be enabled before this routine.
+        s32i    a0, sp, +XT_STK_TMP        // keep return address on the stack
+
+        // SPILL_REGISTERS macro requires window overflow exceptions to be enabled,
+        // i.e. PS.EXCM cleared and PS.WOE set.
+        // Since we are going to clear PS.EXCM, we also need to increase INTLEVEL
+        // at least to XCHAL_EXCM_LEVEL. This matches that value of effective INTLEVEL
+        // at entry (CINTLEVEL=max(PS.INTLEVEL, XCHAL_EXCM_LEVEL) when PS.EXCM is set.
+        // Since WindowOverflow exceptions will trigger inside SPILL_ALL_WINDOWS,
+        // need to save/restore EPC1 as well.
+        // Note: even though a4-a15 are saved into the exception frame, we should not
+        // clobber them until after SPILL_REGISTERS. This is because these registers
+        // may contain live windows belonging to previous frames in the call stack.
+        // These frames will be spilled by SPILL_REGISTERS, and if the register was
+        // used as a temporary by this code, the temporary value would get stored
+        // onto the stack, instead of the real value.
+        //
         
-        mov     a9, a0                   // store return address
+        rsr     a2, PS                     // to be restored after SPILL_REGISTERS
+        movi    a0, PS_INTLEVEL_MASK
+        and     a3, a2, a0                 // get the current INTLEVEL
+        bgeui   a3, +PS_INTLEVEL_EXCM, 1f  // calculate max(INTLEVEL, XCHAL_EXCM_LEVEL) - 3 = XCHAL_EXCM_LEVEL
+        movi    a3, PS_INTLEVEL_EXCM
+        1:
+        movi    a0, PS_WOE       // clear EXCM, enable window overflow, set new INTLEVEL
+        or      a3, a3, a0
+        wsr     a3, ps
+        rsr     a0, EPC1
+        
         addmi   sp,  sp, +XT_STK_FRMSZ   // go back to spill register region
         SPILL_REGISTERS
         addmi   sp,  sp, -XT_STK_FRMSZ   // return the current stack pointer
-        mov     a0, a9                   // retrieve return address
+        
+        wsr     a2, PS                   //  restore to the value at entry
+        rsync
+        wsr     a0, EPC1
+
+        l32i    a0,  sp, +XT_STK_TMP
+        ",
+        "
         ret
         ",
     },
@@ -243,23 +274,6 @@ global_asm!(
     s32i    a0, sp, +XT_STK_A1         // save interruptee's A1/SP
     s32e    a0, sp, -12                // for debug backtrace 
 
-    .ifc \level,double
-    rsr     a0, DEPC                   
-    .else
-    rsr     a0, EPC\level                   
-    .endif
-    s32i    a0, sp, +XT_STK_PC         // save interruptee's PC 
-    s32e    a0, sp, -16                // for debug backtrace 
-
-    .ifc \level,double
-    rsr     a0, EXCSAVE7               // ok to reuse EXCSAVE7 for double exception as long as
-                                       // double exception is not in first couple of instructions
-                                       // of level 7 handler
-    .else
-    rsr     a0, EXCSAVE\level               
-    .endif
-    s32i    a0, sp, +XT_STK_A0         // save interruptee's A0 
-
     .ifc \level,1
     rsr     a0, PS                     
     s32i    a0, sp, +XT_STK_PS         // save interruptee's PS
@@ -268,33 +282,20 @@ global_asm!(
     s32i    a0, sp, +XT_STK_EXCCAUSE
     rsr     a0, EXCVADDR
     s32i    a0, sp, +XT_STK_EXCVADDR
-    .endif
-
-    .ifc \level,double
-    rsr     a0, EXCCAUSE
-    s32i    a0, sp, +XT_STK_EXCCAUSE
-    rsr     a0, EXCVADDR
-    s32i    a0, sp, +XT_STK_EXCVADDR
-    .endif
-
-    // clear EXCM so other exceptions like window overflow can be handled normally again.
-    // If level 1 interrupt or exception then block level 1 interrupts (for higher level
-    // interrupts, this is done automatically).
-    rsr     a0, PS
-    .ifc \level,1
-    movi    a2, ~(PS_EXCM|PS_INTLEVEL_MASK)
-    and     a0, a0, a2
-    movi    a2, 1
-    or      a0, a0, a2
     .else
-    movi    a2, ~PS_EXCM
-    and     a0, a0, a2
+    rsr     a0, EPS\level
+    s32i    a0, sp, +XT_STK_PS         // save interruptee's PS    
     .endif
-    wsr     a0, PS
-    rsync                              // wait for WSR.PS to complete 
+
+    rsr     a0, EPC\level                   
+    s32i    a0, sp, +XT_STK_PC         // save interruptee's PC 
+    s32e    a0, sp, -16                // for debug backtrace 
+
+    rsr     a0, EXCSAVE\level               
+    s32i    a0, sp, +XT_STK_A0         // save interruptee's A0 
 
     call0   save_context
-    
+
     .endm
     "#
 );
@@ -420,6 +421,11 @@ global_asm!(
     wsr     a0, PS
     l32i    a0, sp, +XT_STK_PC        // retrieve interruptee's PC 
     wsr     a0, EPC\level
+    .else
+    l32i    a0, sp, +XT_STK_PS        // retrieve interruptee's PS 
+    wsr     a0, EPS\level
+    l32i    a0, sp, +XT_STK_PC        // retrieve interruptee's PC 
+    wsr     a0, EPC\level    
     .endif 
 
     l32i    a0, sp, +XT_STK_A0        // retrieve interruptee's A0 
@@ -452,6 +458,10 @@ unsafe extern "C" fn __default_naked_exception() {
         j       .RestoreContext
 
         .Level1Interrupt:
+        movi    a0, (1 | PS_WOE)
+        wsr     a0, PS
+        rsync
+
         movi    a6, 1                     // put interrupt level in a6 = a2 in callee
         mov     a7, sp                    // put address of save frame in a7=a3 in callee
         call4   __level_1_interrupt       // call handler <= actual call!
@@ -459,33 +469,65 @@ unsafe extern "C" fn __default_naked_exception() {
         .RestoreContext:
         RESTORE_CONTEXT 1
         
-        .byte 0x00, 0x30, 0x00            // rfe   // PS.EXCM is cleared 
-                                          // TODO: 20200509, not supported in llvm yet
+        rfe                               // PS.EXCM is cleared 
         ",
         options(noreturn)
     )
 }
 
 /// Handle Double Exceptions by storing full context and then calling regular function
+/// Double exceptions are not a normal occurrence. They indicate a bug of some kind.
 ///
 /// # Input:
-///    * A0 stored in ???
+///    * A0 stored in EXCSAVE1
 #[naked]
 #[no_mangle]
 #[link_section = ".rwtext"]
 unsafe extern "C" fn __default_naked_double_exception() {
     asm!(
         "
-        SAVE_CONTEXT double
+        mov     a0, a1                     // save a1/sp
+        addmi   sp, sp, -XT_STK_FRMSZ      // only allow multiple of 256
+    
+        s32i    a0, sp, +XT_STK_A1         // save interruptee's A1/SP
+        s32e    a0, sp, -12                // for debug backtrace 
+    
+        rsr     a0, PS                     
+        s32i    a0, sp, +XT_STK_PS         // save interruptee's PS
+    
+        rsr     a0, EXCCAUSE
+        s32i    a0, sp, +XT_STK_EXCCAUSE
+        rsr     a0, EXCVADDR
+        s32i    a0, sp, +XT_STK_EXCVADDR
+    
+        rsr     a0, DEPC                   
+        s32i    a0, sp, +XT_STK_PC         // save interruptee's PC 
+        s32e    a0, sp, -16                // for debug backtrace 
+    
+        rsr     a0, EXCSAVE7               // ok to reuse EXCSAVE7 for double exception as long as
+                                           // double exception is not in first couple of instructions
+                                           // of level 7 handler
+        s32i    a0, sp, +XT_STK_A0         // save interruptee's A0 
+    
+        call0   save_context
 
         l32i    a6, sp, +XT_STK_EXCCAUSE  // put cause in a6 = a2 in callee
         mov     a7, sp                    // put address of save frame in a7=a3 in callee
         call4   __exception               // call handler <= actual call!
 
-        RESTORE_CONTEXT double
+        // Restore context and return 
+        call0   restore_context
 
-        .byte 0x00, 0x32, 0x00            // rfde   
-                                          // TODO: 20200509, not supported in llvm yet
+        l32i    a0, sp, +XT_STK_PS        // retrieve interruptee's PS 
+        wsr     a0, PS
+        l32i    a0, sp, +XT_STK_PC        // retrieve interruptee's PC 
+        wsr     a0, EPC1
+
+        l32i    a0, sp, +XT_STK_A0        // retrieve interruptee's A0 
+        l32i    sp, sp, +XT_STK_A1        // remove exception frame 
+        rsync                             // ensure PS and EPC written 
+
+        rfde
         ",
         options(noreturn)
     )
@@ -494,15 +536,17 @@ unsafe extern "C" fn __default_naked_double_exception() {
 global_asm!(
     r#"
     .macro HANDLE_INTERRUPT_LEVEL level
-
     SAVE_CONTEXT \level
+
+    movi    a0, (\level | PS_WOE)
+    wsr     a0, PS
+    rsync
 
     movi    a6, \level                     // put interrupt level in a6 = a2 in callee
     mov     a7, sp                         // put address of save frame in a7=a3 in callee
     call4   __level_\level\()_interrupt    // call handler <= actual call!
 
     RESTORE_CONTEXT \level
-    
     rfi \level
 
     .endm

@@ -7,66 +7,63 @@ use super::ExceptionCause;
 /// Must be aligned with assembly frame format in assembly_esp32
 #[repr(C)]
 #[allow(non_snake_case)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Context {
-    PC: u32,
-    PS: u32,
+    pub PC: u32,
+    pub PS: u32,
 
-    A0: u32,
-    A1: u32,
-    A2: u32,
-    A3: u32,
-    A4: u32,
-    A5: u32,
-    A6: u32,
-    A7: u32,
-    A8: u32,
-    A9: u32,
-    A10: u32,
-    A11: u32,
-    A12: u32,
-    A13: u32,
-    A14: u32,
-    A15: u32,
-    SAR: u32,
-    EXCCAUSE: u32,
-    EXCVADDR: u32,
-    LBEG: u32,
-    LEND: u32,
-    LCOUNT: u32,
-    THREADPTR: u32,
-    SCOMPARE1: u32,
-    BR: u32,
-    ACCLO: u32,
-    ACCHI: u32,
-    M0: u32,
-    M1: u32,
-    M2: u32,
-    M3: u32,
-    F64R_LO: u32,
-    F64R_HI: u32,
-    F64S: u32,
-    FCR: u32,
-    FSR: u32,
-    F0: u32,
-    F1: u32,
-    F2: u32,
-    F3: u32,
-    F4: u32,
-    F5: u32,
-    F6: u32,
-    F7: u32,
-    F8: u32,
-    F9: u32,
-    F10: u32,
-    F11: u32,
-    F12: u32,
-    F13: u32,
-    F14: u32,
-    F15: u32,
-
-    reserved: [u32; 7],
-    BASESAVE: [u32; 4],
+    pub A0: u32,
+    pub A1: u32,
+    pub A2: u32,
+    pub A3: u32,
+    pub A4: u32,
+    pub A5: u32,
+    pub A6: u32,
+    pub A7: u32,
+    pub A8: u32,
+    pub A9: u32,
+    pub A10: u32,
+    pub A11: u32,
+    pub A12: u32,
+    pub A13: u32,
+    pub A14: u32,
+    pub A15: u32,
+    pub SAR: u32,
+    pub EXCCAUSE: u32,
+    pub EXCVADDR: u32,
+    pub LBEG: u32,
+    pub LEND: u32,
+    pub LCOUNT: u32,
+    pub THREADPTR: u32,
+    pub SCOMPARE1: u32,
+    pub BR: u32,
+    pub ACCLO: u32,
+    pub ACCHI: u32,
+    pub M0: u32,
+    pub M1: u32,
+    pub M2: u32,
+    pub M3: u32,
+    pub F64R_LO: u32,
+    pub F64R_HI: u32,
+    pub F64S: u32,
+    pub FCR: u32,
+    pub FSR: u32,
+    pub F0: u32,
+    pub F1: u32,
+    pub F2: u32,
+    pub F3: u32,
+    pub F4: u32,
+    pub F5: u32,
+    pub F6: u32,
+    pub F7: u32,
+    pub F8: u32,
+    pub F9: u32,
+    pub F10: u32,
+    pub F11: u32,
+    pub F12: u32,
+    pub F13: u32,
+    pub F14: u32,
+    pub F15: u32,
 }
 
 extern "Rust" {
@@ -76,19 +73,19 @@ extern "Rust" {
     fn __double_exception(cause: ExceptionCause);
 
     /// This symbol will be provided by the user via `#[interrupt(1)]`
-    fn __level_1_interrupt(level: u32);
+    fn __level_1_interrupt(level: u32, save_frame: &mut Context);
     /// This symbol will be provided by the user via `#[interrupt(2)]`
-    fn __level_2_interrupt(level: u32);
+    fn __level_2_interrupt(level: u32, save_frame: &mut Context);
     /// This symbol will be provided by the user via `#[interrupt(3)]`
-    fn __level_3_interrupt(level: u32);
+    fn __level_3_interrupt(level: u32, save_frame: &mut Context);
     /// This symbol will be provided by the user via `#[interrupt(4)]`
-    fn __level_4_interrupt(level: u32);
+    fn __level_4_interrupt(level: u32, save_frame: &mut Context);
     /// This symbol will be provided by the user via `#[interrupt(5)]`
-    fn __level_5_interrupt(level: u32);
+    fn __level_5_interrupt(level: u32, save_frame: &mut Context);
     /// This symbol will be provided by the user via `#[interrupt(6)]`
-    fn __level_6_interrupt(level: u32);
+    fn __level_6_interrupt(level: u32, save_frame: &mut Context);
     /// This symbol will be provided by the user via `#[interrupt(7)]`
-    fn __level_7_interrupt(level: u32);
+    fn __level_7_interrupt(level: u32, save_frame: &mut Context);
 }
 
 #[no_mangle]
@@ -270,8 +267,8 @@ unsafe extern "C" fn _WindowOverflow4() {
 unsafe extern "C" fn _WindowUnderflow4() {
     asm!(
         "
-        l32e    a1, a5, -12
         l32e    a0, a5, -16
+        l32e    a1, a5, -12
         l32e    a2, a5,  -8
         l32e    a3, a5,  -4
         rfwu
