@@ -1,7 +1,8 @@
 #![no_std]
-#![feature(asm)]
+#![feature(cfg_version)]
+#![cfg_attr(not(version("1.59")), feature(asm))]
 #![feature(asm_experimental_arch)]
-#![feature(global_asm)]
+#![cfg_attr(not(version("1.59")), feature(global_asm))]
 #![feature(naked_functions)]
 // required due to: https://github.com/rust-lang/rust/pull/87324
 #![allow(named_asm_labels)]

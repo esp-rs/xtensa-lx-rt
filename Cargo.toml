@@ -1,6 +1,6 @@
 [package]
 name = "xtensa-lx-rt"
-version = "0.9.0"
+version = "0.10.0"
 description = "Low level access for Xtensa LX processors"
 categories = ["embedded", "hardware-support", "no-std"]
 keywords = ["xtensa", "lx", "register", "peripheral"]
@@ -23,8 +23,8 @@ r0 = "1.0.0"
 xtensa-lx-rt-proc-macros = { path = "procmacros", version = "=0.1.0" }
 
 [build-dependencies]
-core-isa-parser = { path = "core-isa-parser", version = "=0.1.0" }
-minijinja = "0.13.0"
+core-isa-parser = { path = "core-isa-parser", version = "=0.2.0" }
+minijinja = "0.15.0"
 
 [features]
 esp32   = []
