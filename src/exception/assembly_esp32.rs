@@ -7,7 +7,7 @@ use core::arch::{asm, global_asm};
 // we could cut that memory usage.
 // However in order to conveniently use `addmi` we need 256-byte alignment anyway
 // so wasting a bit more stack space seems to be the better option.
-// Additionally currently there is a huge chunk of memory reserved for spilling the registers.
+// Additionally there is a chunk of memory reserved for spilling the registers.
 global_asm!(
     "
     .set XT_STK_PC,              0 
@@ -66,8 +66,8 @@ global_asm!(
     .set XT_STK_F15,           212
     .set XT_STK_TMP,           216
 
-    .set XT_STK_FRMSZ,         512      // needs to be multiple of 16 and enough additional free space
-                                        // for the registers spilled to the stack
+    .set XT_STK_FRMSZ,         256      // needs to be multiple of 16 and enough additional free space
+                                        // for the registers spilled to the stack (max 8 registers / 0x20 bytes)
                                         // multiple of 256 allows use of addmi instruction
 
 
@@ -250,6 +250,37 @@ unsafe extern "C" fn save_context() {
 
 global_asm!(
     r#"
+    // Spills all active windowed registers (i.e. registers not visible as
+    // A0-A15) to their ABI-defined spill regions on the stack.
+    // It will spill up to 8 registers (if the intrrupted code was called by call12).
+    //
+    // Unlike the Xtensa HAL implementation, this code requires that the
+    // EXCM and WOE bit be enabled in PS, and relies on repeated hardware
+    // exception handling to do the register spills.  The trick is to do a
+    // noop write to the high registers, which the hardware will trap
+    // (into an overflow exception) in the case where those registers are
+    // already used by an existing call frame.  Then it rotates the window
+    // and repeats until all but the A0-A3 registers of the original frame
+    // are guaranteed to be spilled, eventually rotating back around into
+    // the original frame.  Advantages:
+    //
+    // - Vastly smaller code size
+    //
+    // - More easily maintained if changes are needed to window over/underflow
+    //   exception handling.
+    //
+    // - Requires no scratch registers to do its work, so can be used safely in any
+    //   context.
+    //
+    // - If the WOE bit is not enabled (for example, in code written for
+    //   the CALL0 ABI), this becomes a silent noop and operates compatbily.
+    //
+    // - Hilariously it's ACTUALLY FASTER than the HAL routine.  And not
+    //   just a little bit, it's MUCH faster.  With a mostly full register
+    //   file on an LX6 core (ESP-32) I'm measuring 145 cycles to spill
+    //   registers with this vs. 279 (!) to do it with
+    //   xthal_spill_windows().
+       
     .macro SPILL_REGISTERS
     and a12, a12, a12                
     rotw 3
