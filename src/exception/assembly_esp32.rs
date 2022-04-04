@@ -7,7 +7,7 @@ use core::arch::{asm, global_asm};
 // we could cut that memory usage.
 // However in order to conveniently use `addmi` we need 256-byte alignment anyway
 // so wasting a bit more stack space seems to be the better option.
-// Additionally there is a chunk of memory reserved for spilling the registers.
+// Additionally there is a chunk of memory reserved for spilled registers.
 global_asm!(
     "
     .set XT_STK_PC,              0 
@@ -209,7 +209,7 @@ unsafe extern "C" fn save_context() {
         // Since we are going to clear PS.EXCM, we also need to increase INTLEVEL
         // at least to XCHAL_EXCM_LEVEL. This matches that value of effective INTLEVEL
         // at entry (CINTLEVEL=max(PS.INTLEVEL, XCHAL_EXCM_LEVEL) when PS.EXCM is set.
-        // Since WindowOverflow exceptions will trigger inside SPILL_ALL_WINDOWS,
+        // Since WindowOverflow exceptions will trigger inside SPILL_REGISTERS,
         // need to save/restore EPC1 as well.
         // Note: even though a4-a15 are saved into the exception frame, we should not
         // clobber them until after SPILL_REGISTERS. This is because these registers
@@ -252,7 +252,7 @@ global_asm!(
     r#"
     // Spills all active windowed registers (i.e. registers not visible as
     // A0-A15) to their ABI-defined spill regions on the stack.
-    // It will spill up to 8 registers (if the intrrupted code was called by call12).
+    // It will spill registers to their reserved locations in previous frames.
     //
     // Unlike the Xtensa HAL implementation, this code requires that the
     // EXCM and WOE bit be enabled in PS, and relies on repeated hardware
@@ -483,13 +483,17 @@ unsafe extern "C" fn __default_naked_exception() {
         l32i    a6, sp, +XT_STK_EXCCAUSE  // put cause in a6 = a2 in callee
         beqi    a6, 4, .Level1Interrupt
 
+        movi    a0, (PS_INTLEVEL_EXCM | PS_WOE)
+        wsr     a0, PS
+        rsync
+
         mov     a7, sp                    // put address of save frame in a7=a3 in callee
         call4   __exception               // call handler <= actual call!
 
         j       .RestoreContext
 
         .Level1Interrupt:
-        movi    a0, (1 | PS_WOE)
+        movi    a0, (PS_INTLEVEL_EXCM | PS_WOE)
         wsr     a0, PS
         rsync
 
@@ -569,7 +573,7 @@ global_asm!(
     .macro HANDLE_INTERRUPT_LEVEL level
     SAVE_CONTEXT \level
 
-    movi    a0, (\level | PS_WOE)
+    movi    a0, (PS_INTLEVEL_EXCM | PS_WOE)
     wsr     a0, PS
     rsync
 
