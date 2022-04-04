@@ -1,6 +1,6 @@
 [package]
 name = "xtensa-lx-rt"
-version = "0.10.0"
+version = "0.11.0"
 description = "Low level access for Xtensa LX processors"
 categories = ["embedded", "hardware-support", "no-std"]
 keywords = ["xtensa", "lx", "register", "peripheral"]
