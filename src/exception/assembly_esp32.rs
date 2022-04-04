@@ -72,7 +72,7 @@ global_asm!(
 
 
 
-    .set PS_INTLEVEL_EXCM, 3	        // interrupts above this level shouldn't be used - can we raise this for bare-metal?
+    .set PS_INTLEVEL_EXCM, 3	        // interrupt handlers above this level shouldn't be written in high level languages
     .set PS_INTLEVEL_MASK, 0x0000000f
     .set PS_EXCM,          0x00000010
     .set PS_UM,            0x00000020
@@ -480,12 +480,12 @@ unsafe extern "C" fn __default_naked_exception() {
         "
         SAVE_CONTEXT 1
 
-        l32i    a6, sp, +XT_STK_EXCCAUSE  // put cause in a6 = a2 in callee
-        beqi    a6, 4, .Level1Interrupt
-
         movi    a0, (PS_INTLEVEL_EXCM | PS_WOE)
         wsr     a0, PS
         rsync
+
+        l32i    a6, sp, +XT_STK_EXCCAUSE  // put cause in a6 = a2 in callee
+        beqi    a6, 4, .Level1Interrupt
 
         mov     a7, sp                    // put address of save frame in a7=a3 in callee
         call4   __exception               // call handler <= actual call!
@@ -493,10 +493,6 @@ unsafe extern "C" fn __default_naked_exception() {
         j       .RestoreContext
 
         .Level1Interrupt:
-        movi    a0, (PS_INTLEVEL_EXCM | PS_WOE)
-        wsr     a0, PS
-        rsync
-
         movi    a6, 1                     // put interrupt level in a6 = a2 in callee
         mov     a7, sp                    // put address of save frame in a7=a3 in callee
         call4   __level_1_interrupt       // call handler <= actual call!
