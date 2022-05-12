@@ -213,7 +213,7 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
         #[export_name = "__exception"]
         pub unsafe extern "C" fn #tramp_ident(
             cause: xtensa_lx_rt::exception::ExceptionCause,
-            frame: xtensa_lx_rt::exception::Context
+            frame: &mut xtensa_lx_rt::exception::Context
         ) {
             #ident(
                 #(#args),*

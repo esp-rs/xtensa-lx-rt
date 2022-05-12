@@ -68,9 +68,9 @@ pub struct Context {
 
 extern "Rust" {
     /// This symbol will be provided by the user via `#[exception]`
-    fn __exception(cause: ExceptionCause);
+    fn __exception(cause: ExceptionCause, save_frame: &mut Context);
     /// No attribute is supplied for this symbol as the double exception can hardly occur
-    fn __double_exception(cause: ExceptionCause);
+    fn __double_exception(cause: ExceptionCause, save_frame: &mut Context);
 
     /// This symbol will be provided by the user via `#[interrupt(1)]`
     fn __level_1_interrupt(level: u32, save_frame: &mut Context);
