@@ -67,8 +67,10 @@ pub struct Context {
 }
 
 extern "Rust" {
-    /// This symbol will be provided by the user via `#[exception]`
+    /// The exception assembly jumps here once registers have been spilled
     fn __exception(cause: ExceptionCause, save_frame: &mut Context);
+    /// This symbol will be provided by the user via `#[exception]`
+    fn __user_exception(cause: ExceptionCause, save_frame: &mut Context);
     /// No attribute is supplied for this symbol as the double exception can hardly occur
     fn __double_exception(cause: ExceptionCause, save_frame: &mut Context);
 
@@ -90,7 +92,13 @@ extern "Rust" {
 
 #[no_mangle]
 #[link_section = ".rwtext"]
-extern "C" fn __default_exception(cause: ExceptionCause, save_frame: &Context) {
+unsafe extern "C" fn __default_exception(cause: ExceptionCause, save_frame: &mut Context) {
+    __user_exception(cause, save_frame)
+}
+
+#[no_mangle]
+#[link_section = ".rwtext"]
+extern "C" fn __default_user_exception(cause: ExceptionCause, save_frame: &Context) {
     panic!("Exception: {:?}, {:08x?}", cause, save_frame)
 }
 

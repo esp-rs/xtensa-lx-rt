@@ -14,6 +14,15 @@ Minimal runtime/startup for Xtensa LX processors. This crate currently supports 
 | `esp32s3` | ESP32-S3 (_LX7_)  |
 | `esp8266` | ESP8266 (_LX106_) |
 
+## I get linker errors when I build for debug
+
+Xtensa only provides a small code space for exceptions to fit inside, when building an unoptimized build the code size of a exception handler may exceed that size, causing a linker error. To fix this, you should always optimize this crate, even in debug builds. Adding the following to your projects `Cargo.toml` should do the trick.
+
+```toml
+[profile.dev.package.xtensa-lx-rt]
+opt-level = 'z'
+```
+
 ## License
 
 Licensed under either of

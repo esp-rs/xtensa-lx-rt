@@ -2,6 +2,7 @@
 
 /* high level exception/interrupt routines, which can be override with Rust functions */
 PROVIDE(__exception = __default_exception);
+PROVIDE(__user_exception = __default_user_exception);
 PROVIDE(__double_exception = __default_double_exception);
 PROVIDE(__level_1_interrupt = __default_interrupt);
 PROVIDE(__level_2_interrupt = __default_interrupt);

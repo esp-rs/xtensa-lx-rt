@@ -158,16 +158,6 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
         .into();
     }
 
-    let inputs = f.sig.inputs.clone();
-
-    let args = inputs.iter().map(|arg| match arg {
-        syn::FnArg::Typed(x) => {
-            let pat = &*x.pat;
-            quote!(#pat)
-        }
-        _ => quote!(#arg),
-    });
-
     let (statics, stmts) = match extract_static_muts(f.block.stmts) {
         Err(e) => return e.to_compile_error().into(),
         Ok(x) => x,
@@ -183,45 +173,13 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
     }));
     f.block.stmts = stmts;
 
-    let tramp_ident = Ident::new(&format!("{}_trampoline", f.sig.ident), Span::call_site());
-    let ident = &f.sig.ident;
-
-    let resource_args = statics
-        .iter()
-        .map(|statik| {
-            let (ref cfgs, ref attrs) = extract_cfgs(statik.attrs.clone());
-            let ident = &statik.ident;
-            let ty = &statik.ty;
-            let expr = &statik.expr;
-            quote! {
-                #(#cfgs)*
-                {
-                    #(#attrs)*
-                    static mut #ident: #ty = #expr;
-                    &mut #ident
-                }
-            }
-        })
-        .collect::<Vec<_>>();
-
     let (ref cfgs, ref attrs) = extract_cfgs(f.attrs.clone());
 
     quote!(
         #(#cfgs)*
         #(#attrs)*
         #[doc(hidden)]
-        #[export_name = "__exception"]
-        pub unsafe extern "C" fn #tramp_ident(
-            cause: xtensa_lx_rt::exception::ExceptionCause,
-            frame: &mut xtensa_lx_rt::exception::Context
-        ) {
-            #ident(
-                #(#args),*
-                #(#resource_args),*
-            )
-        }
-
-        #[inline(always)]
+        #[export_name = "__user_exception"]
         #f
     )
     .into()
