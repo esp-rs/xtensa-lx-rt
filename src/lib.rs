@@ -84,18 +84,27 @@ pub unsafe extern "C" fn Reset() -> ! {
 #[doc(hidden)]
 #[inline]
 unsafe fn reset_internal_timers() {
-    #[cfg(feature = "esp32")]
-    asm!("
-        wsr.ccompare0 {0}
-        wsr.ccompare1 {0}
-        wsr.ccompare2 {0}
-        isync
-    ", out(reg) _, options(nostack));
-    #[cfg(feature = "lx106")]
-    asm!("
-        wsr.ccompare0 {0}
-        isync
-    ", out(reg) _, options(nostack));
+    #[cfg(any(
+        XCHAL_HAVE_TIMER0,
+        XCHAL_HAVE_TIMER1,
+        XCHAL_HAVE_TIMER2,
+        XCHAL_HAVE_TIMER3
+    ))]
+    {
+        let value = 0;
+        cfg_asm!(
+        {
+            #[cfg(XCHAL_HAVE_TIMER0)]
+            "wsr.ccompare0 {0}",
+            #[cfg(XCHAL_HAVE_TIMER1)]
+            "wsr.ccompare1 {0}",
+            #[cfg(XCHAL_HAVE_TIMER2)]
+            "wsr.ccompare2 {0}",
+            #[cfg(XCHAL_HAVE_TIMER3)]
+            "wsr.ccompare3 {0}",
+            "isync",
+        }, in(reg) value, options(nostack));
+    }
 }
 
 #[doc(hidden)]
