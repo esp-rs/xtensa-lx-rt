@@ -12,6 +12,16 @@ PROVIDE(__level_5_interrupt = __default_interrupt);
 PROVIDE(__level_6_interrupt = __default_interrupt);
 PROVIDE(__level_7_interrupt = __default_interrupt);
 
+/* high level CPU interrupts */
+PROVIDE(Timer0 = __default_user_exception);
+PROVIDE(Timer1 = __default_user_exception);
+PROVIDE(Timer2 = __default_user_exception);
+PROVIDE(Timer3 = __default_user_exception);
+PROVIDE(Profiling = __default_user_exception);
+PROVIDE(NMI = __default_user_exception);
+PROVIDE(Software0 = __default_user_exception);
+PROVIDE(Software1 = __default_user_exception);
+
 /* low level exception/interrupt, which must be overridden using naked functions */
 PROVIDE(__naked_user_exception = __default_naked_exception);
 PROVIDE(__naked_kernel_exception = __default_naked_exception);
