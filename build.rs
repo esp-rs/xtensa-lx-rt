@@ -58,7 +58,7 @@ fn handle_esp32() {
     let isa_config = get_config(chip).expect("Unable to parse ISA config");
 
     inject_cfgs(&isa_config);
-    inject_timer_cfgs(&isa_config);
+    inject_cpu_cfgs(&isa_config);
     generate_exception_x(&out, &isa_config);
     generate_interrupt_level_masks(&out, &isa_config);
 }
@@ -125,15 +125,20 @@ fn inject_cfgs(isa_config: &HashMap<String, Value>) {
     }
 }
 
-fn inject_timer_cfgs(isa_config: &HashMap<String, Value>) {
+fn inject_cpu_cfgs(isa_config: &HashMap<String, Value>) {
     for (key, value) in isa_config {
-        if key.starts_with("XCHAL_TIMER") {
+        if key.starts_with("XCHAL_TIMER") || key.starts_with("XCHAL_PROFILING") || key.starts_with("XCHAL_NMI") {
             if let Some(_) = value.as_integer() {
                 let mut s = String::from(key.trim_end_matches("_INTERRUPT"));
                 let first = s.chars().position(|c| c == '_').unwrap() + 1;
                 s.insert_str(first, "HAVE_");
                 println!("cargo:rustc-cfg={}", s);
             }
+        }
+    }
+    if let Some(value) = isa_config.get("XCHAL_INTTYPE_MASK_SOFTWARE").map(|v| v.as_integer()).flatten() {
+        for i in 0..value.count_ones() {
+            println!("cargo:rustc-cfg=XCHAL_HAVE_SOFTWARE{}", i);
         }
     }
 }

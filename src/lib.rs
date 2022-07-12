@@ -107,6 +107,29 @@ unsafe fn reset_internal_timers() {
     }
 }
 
+// CPU Interrupts
+extern "C" {
+    #[cfg(XCHAL_HAVE_TIMER0)]
+    pub fn Timer0(level: u32);
+    #[cfg(XCHAL_HAVE_TIMER1)]
+    pub fn Timer1(level: u32);
+    #[cfg(XCHAL_HAVE_TIMER2)]
+    pub fn Timer2(level: u32);
+    #[cfg(XCHAL_HAVE_TIMER3)]
+    pub fn Timer3(level: u32);
+
+    #[cfg(XCHAL_HAVE_PROFILING)]
+    pub fn Profiling(level: u32);
+
+    #[cfg(XCHAL_HAVE_SOFTWARE0)]
+    pub fn Software0(level: u32);
+    #[cfg(XCHAL_HAVE_SOFTWARE1)]
+    pub fn Software1(level: u32);
+
+    #[cfg(XCHAL_HAVE_NMI)]
+    pub fn NMI(level: u32);
+}
+
 #[doc(hidden)]
 #[inline]
 unsafe fn set_vecbase(base: *const u32) {
