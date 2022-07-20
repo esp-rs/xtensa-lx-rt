@@ -493,6 +493,10 @@ unsafe extern "C" fn __default_naked_exception() {
         j       .RestoreContext
 
         .Level1Interrupt:
+        movi    a0, (1 | PS_WOE)          // set PS.INTLEVEL accordingly
+        wsr     a0, PS
+        rsync
+
         movi    a6, 1                     // put interrupt level in a6 = a2 in callee
         mov     a7, sp                    // put address of save frame in a7=a3 in callee
         call4   __level_1_interrupt       // call handler <= actual call!
@@ -569,7 +573,7 @@ global_asm!(
     .macro HANDLE_INTERRUPT_LEVEL level
     SAVE_CONTEXT \level
 
-    movi    a0, (PS_INTLEVEL_EXCM | PS_WOE)
+    movi    a0, (\level | PS_WOE)
     wsr     a0, PS
     rsync
 
