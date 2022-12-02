@@ -127,7 +127,10 @@ fn inject_cfgs(isa_config: &HashMap<String, Value>) {
 
 fn inject_cpu_cfgs(isa_config: &HashMap<String, Value>) {
     for (key, value) in isa_config {
-        if key.starts_with("XCHAL_TIMER") || key.starts_with("XCHAL_PROFILING") || key.starts_with("XCHAL_NMI") {
+        if key.starts_with("XCHAL_TIMER")
+            || key.starts_with("XCHAL_PROFILING")
+            || key.starts_with("XCHAL_NMI")
+        {
             if let Some(_) = value.as_integer() {
                 let mut s = String::from(key.trim_end_matches("_INTERRUPT"));
                 let first = s.chars().position(|c| c == '_').unwrap() + 1;
@@ -136,7 +139,11 @@ fn inject_cpu_cfgs(isa_config: &HashMap<String, Value>) {
             }
         }
     }
-    if let Some(value) = isa_config.get("XCHAL_INTTYPE_MASK_SOFTWARE").map(|v| v.as_integer()).flatten() {
+    if let Some(value) = isa_config
+        .get("XCHAL_INTTYPE_MASK_SOFTWARE")
+        .map(|v| v.as_integer())
+        .flatten()
+    {
         for i in 0..value.count_ones() {
             println!("cargo:rustc-cfg=XCHAL_HAVE_SOFTWARE{}", i);
         }
