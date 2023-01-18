@@ -54,40 +54,43 @@ SECTIONS {
 
   .vectors :
   {
-    . = 0x0;
+    /* 
+      Each vector has 64 bytes that it must fit inside. For each vector we calculate the size of the previous one, 
+      and subtract that from 64 and start the new vector there.
+    */
     _init_start = ABSOLUTE(.);
-    . = {{ XCHAL_WINDOW_OF4_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.WindowOverflow4.text));
-    . = {{ XCHAL_WINDOW_UF4_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.WindowUnderflow4.text));
-    . = {{ XCHAL_WINDOW_OF8_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.WindowOverflow8.text));
-    . = {{ XCHAL_WINDOW_UF8_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.WindowUnderflow8.text));
-    . = {{ XCHAL_WINDOW_OF12_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.WindowOverflow12.text));
-    . = {{ XCHAL_WINDOW_UF12_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.WindowUnderflow12.text));
-    . = {{ XCHAL_INTLEVEL2_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.Level2InterruptVector.text));
-    . = {{ XCHAL_INTLEVEL3_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.Level3InterruptVector.text));
-    . = {{ XCHAL_INTLEVEL4_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.Level4InterruptVector.text));
-    . = {{ XCHAL_INTLEVEL5_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.Level5InterruptVector.text));
-    . = {{ XCHAL_INTLEVEL6_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.DebugExceptionVector.text));
-    . = {{ XCHAL_NMI_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.NMIExceptionVector.text));
-    . = {{ XCHAL_KERNEL_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.KernelExceptionVector.text));
-    . = {{ XCHAL_USER_VECOFS }};
+    . = ALIGN(64);
     KEEP(*(.UserExceptionVector.text));
-    . = {{ XCHAL_DOUBLEEXC_VECOFS }};
+    . = ALIGN(128);
     KEEP(*(.DoubleExceptionVector.text));
-    . = 0x400;
-
+    . = ALIGN(64);
+    . = ALIGN(0x400);
     _init_end = ABSOLUTE(.);
   } > vectors_seg
 }
