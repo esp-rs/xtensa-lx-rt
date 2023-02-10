@@ -8,7 +8,7 @@ keywords = ["esp32", "xtensa-lx-rt", "runtime", "startup"]
 license = "MIT OR Apache-2.0"
 name = "xtensa-lx-rt-proc-macros"
 repository = "https://github.com/esp-rs/xtensa-lx-rt"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 
 [lib]
