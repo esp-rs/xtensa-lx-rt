@@ -1,24 +1,13 @@
 #![no_std]
-#![feature(cfg_version)]
-#![cfg_attr(not(version("1.59")), feature(asm))]
-#![feature(asm_experimental_arch)]
-#![cfg_attr(not(version("1.59")), feature(global_asm))]
-#![feature(naked_functions)]
+#![feature(asm_experimental_arch, naked_functions)]
+#![allow(asm_sub_register)]
 // required due to: https://github.com/rust-lang/rust/pull/87324
 #![allow(named_asm_labels)]
 
 use core::arch::asm;
 
-pub use proc_macros::entry;
-pub use proc_macros::exception;
-pub use proc_macros::interrupt;
-pub use proc_macros::pre_init;
-
-use r0;
-pub use r0::init_data;
-pub use r0::zero_bss;
-
-use xtensa_lx_rt_proc_macros as proc_macros;
+pub use r0::{init_data, zero_bss};
+pub use xtensa_lx_rt_proc_macros::{entry, exception, interrupt, pre_init};
 
 pub mod exception;
 pub mod interrupt;
@@ -50,6 +39,8 @@ pub unsafe extern "C" fn Reset() -> ! {
         // This symbol will be provided by the user via `#[pre_init]`
         fn __pre_init();
 
+        fn __post_init();
+
         fn __zero_bss() -> bool;
 
         fn __init_data() -> bool;
@@ -74,12 +65,17 @@ pub unsafe extern "C" fn Reset() -> ! {
     // move vec table
     set_vecbase(&_init_start as *const u32);
 
+    __post_init();
+
     main();
 }
 
-/*
-    We redefine these functions to avoid pulling in xtensa-lx as a dependency
-*/
+#[doc(hidden)]
+#[no_mangle]
+#[rustfmt::skip]
+pub unsafe extern "Rust" fn default_post_init() {}
+
+// We redefine these functions to avoid pulling in `xtensa-lx` as a dependency:
 
 #[doc(hidden)]
 #[inline]

@@ -6,13 +6,28 @@
 
 extern crate proc_macro;
 
+use std::collections::HashSet;
+
+use darling::ast::NestedMeta;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use std::collections::HashSet;
 use syn::{
-    parse, parse_macro_input, spanned::Spanned, AttrStyle, Attribute, AttributeArgs, FnArg, Ident,
-    Item, ItemFn, ItemStatic, ReturnType, Stmt, Type, Visibility,
+    parse,
+    parse_macro_input,
+    spanned::Spanned,
+    AttrStyle,
+    Attribute,
+    FnArg,
+    Ident,
+    Item,
+    ItemFn,
+    ItemStatic,
+    ReturnType,
+    StaticMutability,
+    Stmt,
+    Type,
+    Visibility,
 };
 
 /// Marks a function as the main function to be called on program start
@@ -196,7 +211,12 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
 pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut f: ItemFn = syn::parse(input).expect("`#[interrupt]` must be applied to a function");
 
-    let attr_args = parse_macro_input!(args as AttributeArgs);
+    let attr_args = match NestedMeta::parse_meta_list(args.into()) {
+        Ok(v) => v,
+        Err(e) => {
+            return TokenStream::from(darling::Error::from(e).write_errors());
+        }
+    };
 
     if attr_args.len() > 1 {
         return parse::Error::new(
@@ -211,7 +231,7 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
 
     if attr_args.len() == 1 {
         match &attr_args[0] {
-            syn::NestedMeta::Lit(syn::Lit::Int(lit_int)) => match lit_int.base10_parse::<u32>() {
+            NestedMeta::Lit(syn::Lit::Int(lit_int)) => match lit_int.base10_parse::<u32>() {
                 Ok(x) => level = x,
                 Err(_) => {
                     return parse::Error::new(
@@ -449,8 +469,8 @@ fn extract_static_muts(
     let mut stmts = vec![];
     while let Some(stmt) = istmts.next() {
         match stmt {
-            Stmt::Item(Item::Static(var)) => {
-                if var.mutability.is_some() {
+            Stmt::Item(Item::Static(var)) => match var.mutability {
+                StaticMutability::Mut(_) => {
                     if seen.contains(&var.ident) {
                         return Err(parse::Error::new(
                             var.ident.span(),
@@ -460,10 +480,12 @@ fn extract_static_muts(
 
                     seen.insert(var.ident.clone());
                     statics.push(var);
-                } else {
+                }
+                StaticMutability::None => {
                     stmts.push(Stmt::Item(Item::Static(var)));
                 }
-            }
+                _ => unimplemented!(), // `StaticMutability` is `#[non_exhaustive]`
+            },
             _ => {
                 stmts.push(stmt);
                 break;
@@ -519,9 +541,7 @@ fn check_attr_whitelist(attrs: &[Attribute], caller: WhiteListCaller) -> Result<
         }
 
         let err_str = match caller {
-            WhiteListCaller::Entry => {
-                "this attribute is not allowed on a xtensa-lx-rt entry point"
-            }
+            WhiteListCaller::Entry => "this attribute is not allowed on a xtensa-lx-rt entry point",
             WhiteListCaller::Exception => {
                 "this attribute is not allowed on an exception handler controlled by xtensa-lx-rt"
             }
@@ -547,5 +567,5 @@ fn check_attr_whitelist(attrs: &[Attribute], caller: WhiteListCaller) -> Result<
 
 /// Returns `true` if `attr.path` matches `name`
 fn eq(attr: &Attribute, name: &str) -> bool {
-    attr.style == AttrStyle::Outer && attr.path.is_ident(name)
+    attr.style == AttrStyle::Outer && attr.path().is_ident(name)
 }
