@@ -1,6 +1,6 @@
 [package]
 name = "xtensa-lx-rt"
-version = "0.15.0"
+version = "0.16.0"
 authors = [
     "Scott Mabin <scott@mabez.dev>", 
     "Arjan Mels <arjan@mels.email>",
@@ -21,7 +21,7 @@ features = ["esp32"]
 [dependencies]
 bare-metal = "1.0.0"
 r0 = "1.0.0"
-xtensa-lx-rt-proc-macros = { path = "procmacros", version = "=0.2.0" }
+xtensa-lx-rt-proc-macros = { path = "procmacros", version = "=0.2.1" }
 
 [build-dependencies]
 core-isa-parser = { path = "core-isa-parser", version = "=0.2.0" }
