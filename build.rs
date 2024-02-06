@@ -16,30 +16,13 @@ fn main() {
         .write_all(include_bytes!("xtensa.in.x"))
         .unwrap();
 
-    match (
-        cfg!(feature = "esp32") || cfg!(feature = "esp32s2") || cfg!(feature = "esp32s3"),
-        cfg!(feature = "esp8266"),
-    ) {
-        (true, false) => handle_esp32(),
-        (false, true) => handle_esp8266(),
-        _ => panic!("Either the esp32, esp32s2, esp32s3 or esp8266 feature must be enabled"),
-    };
-
     println!("cargo:rustc-link-search={}", out.display());
+
+    handle_esp32();
 
     // Only re-run the build script when xtensa.in.x is changed,
     // instead of when any part of the source code changes.
     println!("cargo:rerun-if-changed=xtensa.in.x");
-}
-
-fn handle_esp8266() {
-    let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let exception_source = &include_bytes!("exception-esp8266.x")[..];
-
-    File::create(out.join("exception.x"))
-        .unwrap()
-        .write_all(exception_source)
-        .unwrap();
 }
 
 fn handle_esp32() {
@@ -79,7 +62,7 @@ fn handle_esp32() {
         (true, false, false) => Chip::Esp32,
         (false, true, false) => Chip::Esp32s2,
         (false, false, true) => Chip::Esp32s3,
-        _ => panic!("Either the esp32, esp32s2, esp32s3 or esp8266 feature must be enabled"),
+        _ => panic!("Either the esp32, esp32s2, esp32s3 feature must be enabled"),
     };
     let isa_config = get_config(chip).expect("Unable to parse ISA config");
 

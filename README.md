@@ -12,7 +12,6 @@ Minimal runtime/startup for Xtensa LX processors. This crate currently supports 
 | `esp32`   | ESP32 (_LX6_)     |
 | `esp32s2` | ESP32-S2 (_LX7_)  |
 | `esp32s3` | ESP32-S3 (_LX7_)  |
-| `esp8266` | ESP8266 (_LX106_) |
 
 ## I get linker errors when I build for debug
 

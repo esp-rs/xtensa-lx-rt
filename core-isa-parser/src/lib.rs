@@ -21,8 +21,6 @@ pub enum Chip {
     Esp32s2,
     #[strum(to_string = "xtensa_esp32s3")]
     Esp32s3,
-    #[strum(to_string = "xtensa_lx106")]
-    Esp8266,
 }
 
 impl Chip {

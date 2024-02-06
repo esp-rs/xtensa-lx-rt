@@ -22,14 +22,11 @@
 //! can always be expanded to `mov a0,label; call a0`. Care must be taken since A0 is overwritten.
 //!
 
-#[cfg(any(feature = "esp32", feature = "esp32s2", feature = "esp32s3"))]
-mod assembly_esp32;
-#[cfg(feature = "esp8266")]
-mod assembly_esp8266;
-#[cfg(any(feature = "esp32", feature = "esp32s2", feature = "esp32s3"))]
-mod esp32;
-#[cfg(feature = "esp8266")]
-mod esp8266;
+mod asm;
+mod context;
+
+pub use context::Context;
+
 
 /// EXCCAUSE register values
 ///
@@ -124,7 +121,3 @@ pub enum ExceptionCause {
     None = 255,
 }
 
-#[cfg(any(feature = "esp32", feature = "esp32s2", feature = "esp32s3"))]
-pub use esp32::Context;
-#[cfg(feature = "esp8266")]
-pub use esp8266::Context;
